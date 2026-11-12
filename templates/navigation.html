@@ -1,0 +1,262 @@
+{#
+  OwnableFit template notes
+  Provide shared navigation and highlight the current page.
+  Display cart information and account links based on the current session.
+-#}
+<style>
+    /* Account menu is separate from the shopping links. */
+    .customer-account-menu {
+        position: relative;
+    }
+
+    .customer-account-menu > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .customer-account-menu > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .customer-account-menu > summary::after {
+        content: "▾";
+    }
+
+    .customer-account-menu[open] > summary::after {
+        content: "▴";
+    }
+
+    .customer-account-menu > summary:hover {
+        background: var(--background);
+    }
+
+    .customer-account-menu > summary:focus-visible {
+        outline: 3px solid var(--primary);
+        outline-offset: 4px;
+    }
+
+    .customer-account-menu.account-page > summary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .account-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        width: 230px;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+        box-shadow: 0 12px 28px rgb(55 47 51 / 12%);
+    }
+
+    .account-dropdown-name {
+        margin: 0 0 8px;
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    nav[aria-label="Main navigation"] .account-dropdown a {
+        display: block;
+        margin: 3px 0;
+    }
+
+    nav[aria-label="Main navigation"] .account-logout-form {
+        display: block;
+        margin: 8px 0 0;
+        padding: 8px 0 0;
+        border: 0;
+        border-top: 1px solid var(--border);
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .account-logout-form button {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .admin-shortcut {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding: 14px 18px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+    }
+
+    @media (max-width: 640px) {
+        .account-dropdown {
+            position: static;
+            width: min(260px, 100%);
+            margin-top: 8px;
+            box-shadow: none;
+        }
+
+        .customer-account-menu {
+            max-width: 100%;
+        }
+    }
+</style>
+
+<nav aria-label="Main navigation">
+    <a
+        href="{{ url_for('dashboard') }}"
+        {% if request.endpoint == 'dashboard' %}aria-current="page"{% endif %}
+    >
+        Dashboard
+    </a>
+
+    <a
+        href="{{ url_for('shop') }}"
+        {% if request.endpoint in ['shop', 'product_detail'] %}
+        aria-current="page"
+        {% endif %}
+    >
+        Dress catalogue
+    </a>
+
+    <a
+        href="{{ url_for('home') }}"
+        {% if request.endpoint == 'home' %}aria-current="page"{% endif %}
+    >
+        Get a recommendation
+    </a>
+
+    <a
+        href="{{ url_for('evaluation') }}"
+        {% if request.endpoint == 'evaluation' %}aria-current="page"{% endif %}
+    >
+        Model and evaluation
+    </a>
+
+    <a
+        href="{{ url_for('sustainability') }}"
+        {% if request.endpoint == 'sustainability' %}
+        aria-current="page"
+        {% endif %}
+    >
+        Sustainability scenario
+    </a>
+
+    <a
+        href="{{ url_for('scenario_comparison') }}"
+        {% if request.endpoint == 'scenario_comparison' %}
+        aria-current="page"
+        {% endif %}
+    >
+        Compare scenarios
+    </a>
+
+    {% set cart_count = namespace(total=0) %}
+    {% for item in session.get('cart', []) %}
+        {% set cart_count.total = cart_count.total + item['quantity'] %}
+    {% endfor %}
+
+    <a
+        href="{{ url_for('cart') }}"
+        {% if request.endpoint in ['cart', 'checkout'] %}
+        aria-current="page"
+        {% endif %}
+    >
+        Cart ({{ cart_count.total }})
+    </a>
+
+    {% if g.customer %}
+    <!-- Native disclosure supports mouse, touch and keyboard use. -->
+    <details
+        class="customer-account-menu{% if request.endpoint in [
+            'customer_account', 'my_orders', 'order_review',
+            'payment', 'order_confirmation'
+        ] %} account-page{% endif %}"
+    >
+        <summary>My account</summary>
+
+        <div class="account-dropdown">
+            <p class="account-dropdown-name">
+                {{ g.customer["display_name"] }}
+            </p>
+
+            <a
+                href="{{ url_for('customer_account') }}"
+                {% if request.endpoint == 'customer_account' %}
+                aria-current="page"
+                {% endif %}
+            >
+                My profile
+            </a>
+
+            <a
+                href="{{ url_for('my_orders') }}"
+                {% if request.endpoint == 'my_orders' %}
+                aria-current="page"
+                {% endif %}
+            >
+                My orders
+            </a>
+
+            <!-- Logout remains a protected POST action. -->
+            <form
+                class="account-logout-form"
+                method="post"
+                action="{{ url_for('customer_logout') }}"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ session.get('csrf_token', '') }}"
+                >
+
+                <button type="submit">Sign out</button>
+            </form>
+        </div>
+    </details>
+
+    {% else %}
+    <!-- Guests retain access to orders from their browser session. -->
+    <a
+        href="{{ url_for('my_orders') }}"
+        {% if request.endpoint == 'my_orders' %}
+        aria-current="page"
+        {% endif %}
+    >
+        Guest orders
+    </a>
+
+    <a href="{{ url_for('customer_login') }}">Sign in</a>
+    <a href="{{ url_for('customer_register') }}">Create account</a>
+    {% endif %}
+</nav>
+
+{% if session.get('admin_id') %}
+<aside class="admin-shortcut" aria-label="Administrator shortcut">
+    <strong>Administrator access</strong>
+    <a href="{{ url_for('admin_dashboard') }}">
+        ← Back to admin overview
+    </a>
+</aside>
+{% endif %}

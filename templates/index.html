@@ -1,0 +1,255 @@
+{#
+  OwnableFit template notes
+  Collect a supported dress ID, height, weight, and reported bra-size
+  category.
+  Render a validation error or the dataset size code returned by the
+  prediction route.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Size Recommendation</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .journey {
+            margin: 20px 0;
+            color: var(--muted);
+        }
+
+        .guide {
+            padding: 20px;
+            margin: 24px 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .guide summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .guide li {
+            margin-bottom: 10px;
+        }
+
+        .result-action,
+        .result-action:visited {
+            display: inline-block;
+            margin: 16px 0;
+            padding: 14px 22px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .result-action:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .form-actions button {
+            flex: 1 1 220px;
+        }
+
+        .field-help {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <p class="journey">
+            Browse dresses → Get a prediction → Choose a size → Add to cart
+        </p>
+
+        <h2>Get a size prediction</h2>
+        <p>
+            Enter your measurements for the selected dataset dress.
+            The saved model returns an original dataset size code.
+        </p>
+
+        {% if selected_item_id %}
+        <p><strong>Selected dress ID: {{ selected_item_id }}</strong></p>
+        {% endif %}
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to predict</h2>
+            <p>{{ error }}</p>
+            <p>Check your inputs and complete the form again.</p>
+        </section>
+        {% endif %}
+
+        {% if prediction is not none %}
+        <section role="status" aria-live="polite">
+            <h2>Your prediction</h2>
+
+            {% if result_item_id %}
+            <p>For dress ID {{ result_item_id }}</p>
+            {% endif %}
+
+            <p>
+                Predicted dataset size code:
+                <strong>{{ prediction }}</strong>
+            </p>
+
+            <p>
+                A verified conversion to XS–XL is unavailable.
+                This code must not be interpreted as a retail size
+                or a guarantee of fit.
+            </p>
+
+            {% if result_item_id %}
+            <!-- Generated display product IDs use this exact prefix.
+                 The product route validates that the product exists. -->
+            <a
+                class="result-action"
+                href="{{ url_for(
+                    'product_detail',
+                    product_id='DISPLAY-' ~ result_item_id
+                ) }}"
+            >
+                Choose size and continue →
+            </a>
+
+            <p>
+                Next, select an illustrative shopping size on the product
+                page and click Add to cart. No XS–XL size is automatically
+                selected from this prediction.
+            </p>
+            {% endif %}
+
+            <p>
+                <a href="{{ url_for('evaluation') }}">
+                    Understand the model and its limitations
+                </a>
+            </p>
+        </section>
+        {% endif %}
+
+        <details class="guide">
+            <summary>Measurement guidance</summary>
+            <ul>
+                <li>Enter height in centimetres: 1.65 metres is 165 cm.</li>
+                <li>Enter weight in kilograms, not pounds.</li>
+                <li>
+                    Use a listed bra-size category only if it matches
+                    your notation. Do not guess a conversion.
+                </li>
+            </ul>
+            <p>
+                Validation checks finite, positive measurements.
+                Development-data range checking is not implemented.
+            </p>
+        </details>
+
+        <h2>Your measurements</h2>
+        <p>
+            All fields are required. Measurements are not saved to
+            the cart. Fields reset after submission.
+        </p>
+
+        <form
+            method="post"
+            action="{{ url_for('home') }}"
+            autocomplete="off"
+        >
+            <p>
+                <label for="item_id">Dress ID</label>
+                <input
+                    type="text"
+                    id="item_id"
+                    name="item_id"
+                    list="dress_options"
+                    value="{{ selected_item_id }}"
+                    required
+                >
+
+                <datalist id="dress_options">
+                    {% for item_id in dress_ids %}
+                    <option value="{{ item_id }}"></option>
+                    {% endfor %}
+                </datalist>
+            </p>
+
+            <p>
+                <label for="height_cm">Height (cm)</label>
+                <input
+                    type="number"
+                    id="height_cm"
+                    name="height_cm"
+                    min="0.01"
+                    step="any"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="weight_kg">Weight (kg)</label>
+                <input
+                    type="number"
+                    id="weight_kg"
+                    name="weight_kg"
+                    min="0.01"
+                    step="any"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="bra_size">Bra size — dataset notation</label>
+                <select
+                    id="bra_size"
+                    name="bra_size"
+                    aria-describedby="bra_help"
+                    required
+                >
+                    <option value="" selected disabled>Choose a bra size</option>
+                    {% for bra_size in bra_sizes %}
+                    <option value="{{ bra_size }}">{{ bra_size }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+
+            <p id="bra_help">
+                If your size notation is unsupported, do not guess
+                a conversion.
+            </p>
+
+            <div class="form-actions">
+                <button type="submit">Get size prediction</button>
+                <a href="{{ url_for('home') }}">Clear and start again</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

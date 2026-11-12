@@ -1,0 +1,117 @@
+{#
+  OwnableFit template notes
+  Send the administrator username, password, and session form token to Flask.
+  Display the sign-in error returned by the server if authentication fails.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Administrator Login</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .admin-login-container {
+            max-width: 520px;
+            margin: 40px auto;
+        }
+
+        .admin-login-form {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-login-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .admin-login-back {
+            display: inline-block;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Store administration</p>
+    </header>
+
+    <main>
+        <div class="admin-login-container">
+            <h2>Administrator login</h2>
+
+            <p>
+                Sign in with the administrator account created
+                through the local setup command.
+            </p>
+
+            <p class="admin-login-note">
+                This area is for authorised store management.
+                Customer shopping does not require an administrator login.
+            </p>
+
+            {% if error %}
+            <section role="alert">
+                <h2>Unable to sign in</h2>
+                <p>{{ error }}</p>
+            </section>
+            {% endif %}
+
+            <form
+                class="admin-login-form"
+                method="post"
+                action="{{ url_for('admin_login') }}"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <p>
+                    <label for="admin-username">Username</label>
+                    <input
+                        type="text"
+                        id="admin-username"
+                        name="username"
+                        maxlength="50"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="admin-password">Password</label>
+                    <input
+                        type="password"
+                        id="admin-password"
+                        name="password"
+                        maxlength="256"
+                        autocomplete="current-password"
+                        required
+                    >
+                </p>
+
+                <button type="submit">Sign in</button>
+            </form>
+
+            <p class="admin-login-note">
+                Repeated failed attempts temporarily lock the account.
+                No public administrator registration is provided.
+            </p>
+
+            <a class="admin-login-back" href="{{ url_for('shop') }}">
+                ← Return to the dress catalogue
+            </a>
+        </div>
+    </main>
+</body>
+</html>

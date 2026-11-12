@@ -1,0 +1,311 @@
+{#
+  OwnableFit template notes
+  Collect shared order and emissions assumptions plus three relative reduction
+  rates.
+  Render the low, medium, and high results returned by the backend.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Compare Sustainability Scenarios</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .comparison-panel {
+            margin-top: 24px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .comparison-panel h2 {
+            margin-top: 0;
+        }
+
+        .comparison-scroll {
+            overflow-x: auto;
+        }
+
+        .comparison-scroll:focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 4px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table caption {
+            margin-bottom: 14px;
+            text-align: left;
+            color: var(--muted);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .comparison-table thead {
+            background: var(--background);
+        }
+
+        .comparison-help {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .comparison-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .comparison-actions button {
+            flex: 1 1 220px;
+        }
+
+        .comparison-actions a,
+        .comparison-link {
+            color: var(--primary);
+            text-underline-offset: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dress size recommendation prototype</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Compare sustainability scenarios</h2>
+        <p>
+            Compare low, medium and high assumptions about the relative
+            reduction in size-related returns.
+        </p>
+        <p>
+            These are hypothetical scenarios, not measured OwnableFit
+            benefits or statistical confidence intervals.
+        </p>
+
+        <p>
+            <a class="comparison-link" href="{{ url_for('sustainability') }}">
+                Open the single-scenario calculator
+            </a>
+        </p>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to compare scenarios</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if comparison is not none %}
+        <section class="comparison-panel" aria-labelledby="results-heading">
+            <h2 id="results-heading">Hypothetical comparison results</h2>
+
+            <!-- Allow keyboard users to scroll the table on small screens. -->
+            <div
+                class="comparison-scroll"
+                role="region"
+                aria-label="Scenario comparison results"
+                tabindex="0"
+            >
+                <table class="comparison-table">
+                    <caption>
+                        Shared baseline:
+                        {{ "%.2f"|format(comparison[0]["baseline_returns"]) }}
+                        expected size-related returns
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Scenario</th>
+                            <th scope="col">Relative reduction</th>
+                            <th scope="col">Potential returns avoided</th>
+                            <th scope="col">Expected returns remaining</th>
+                            <th scope="col">Potential saving (kg CO₂e)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scenario in comparison %}
+                        <tr>
+                            <th scope="row">{{ scenario["label"] }}</th>
+                            <td>
+                                {{ "%g"|format(
+                                    scenario["relative_reduction_percent"]
+                                ) }}%
+                            </td>
+                            <td>
+                                {{ "%.2f"|format(
+                                    scenario["avoided_returns"]
+                                ) }}
+                            </td>
+                            <td>
+                                {{ "%.2f"|format(
+                                    scenario["remaining_returns"]
+                                ) }}
+                            </td>
+                            <td>
+                                {{ "%.2f"|format(
+                                    scenario["potential_kg_co2e_saved"]
+                                ) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p>
+                Fractional returns represent expected values.
+                Results depend entirely on the assumptions below.
+            </p>
+        </section>
+        {% endif %}
+
+        <h2>Shared assumptions</h2>
+        <p>
+            Use the same order population and period for all scenarios.
+            Every field is required.
+        </p>
+
+        <form method="post" action="{{ url_for('scenario_comparison') }}">
+            <p>
+                <label for="orders">Number of orders</label>
+                <input
+                    type="number"
+                    id="orders"
+                    name="orders"
+                    min="0"
+                    step="1"
+                    value="{{ assumptions.get('orders', '') }}"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="return_rate">Size-related return rate (%)</label>
+                <input
+                    type="number"
+                    id="return_rate"
+                    name="return_rate"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('return_rate', '') }}"
+                    aria-describedby="return-help"
+                    required
+                >
+                <small id="return-help" class="comparison-help">
+                    Percentage of all orders returned because of size.
+                </small>
+            </p>
+
+            <p>
+                <label for="impact">Emissions per return (kg CO₂e)</label>
+                <input
+                    type="number"
+                    id="impact"
+                    name="impact"
+                    min="0"
+                    step="any"
+                    value="{{ assumptions.get('impact', '') }}"
+                    aria-describedby="impact-help"
+                    required
+                >
+                <small id="impact-help" class="comparison-help">
+                    Document this factor's source and the activities it
+                    covers before using results in the thesis.
+                </small>
+            </p>
+
+            <p>
+                <label for="low">Low relative reduction (%)</label>
+                <input
+                    type="number"
+                    id="low"
+                    name="low"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('low', '') }}"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="medium">Medium relative reduction (%)</label>
+                <input
+                    type="number"
+                    id="medium"
+                    name="medium"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('medium', '') }}"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="high">High relative reduction (%)</label>
+                <input
+                    type="number"
+                    id="high"
+                    name="high"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('high', '') }}"
+                    required
+                >
+            </p>
+
+            <div class="comparison-actions">
+                <button type="submit">Compare scenarios</button>
+                <a href="{{ url_for('scenario_comparison') }}">
+                    Clear comparison
+                </a>
+            </div>
+        </form>
+
+        <section class="comparison-panel">
+            <h2>How to interpret the comparison</h2>
+            <p>
+                Only the assumed relative reduction changes between
+                scenarios. The order count, baseline size-related
+                return rate and emissions factor remain fixed.
+            </p>
+            <p>
+                Reductions must follow low ≤ medium ≤ high.
+                A 10% relative reduction in a 20% return rate leaves
+                an 18% return rate.
+            </p>
+            <p>
+                Model accuracy is not used to calculate these reductions.
+                The results do not establish actual return reductions
+                or net environmental savings.
+            </p>
+        </section>
+    </main>
+</body>
+</html>

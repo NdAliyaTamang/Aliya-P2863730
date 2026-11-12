@@ -1,0 +1,103 @@
+{#
+  OwnableFit template notes
+  Show searchable catalogue records with prices, stock by size, and
+  visibility.
+  Edit links carry the product ID. Page links keep the current search term.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage dresses | OwnableFit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-table { overflow-x: auto; margin: 24px 0; }
+        .admin-table table { width: 100%; border-collapse: collapse; }
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .admin-search { grid-template-columns: minmax(0, 1fr); }
+        .admin-pagination { display: flex; flex-wrap: wrap; gap: 16px; }
+    </style>
+</head>
+<body>
+    <header><h1>Manage dresses</h1></header>
+    <main>
+        <nav aria-label="Administration">
+            <a href="{{ url_for('admin_dashboard') }}">Admin dashboard</a>
+            <a href="{{ url_for('admin_product') }}">Add a dress</a>
+            <a href="{{ url_for('shop') }}">View storefront</a>
+        </nav>
+
+        {# A GET form keeps the search term in the page address. #}
+        <form class="admin-search" method="get">
+            <p>
+                <label for="query">Search by name or dress ID</label>
+                <input id="query" name="q" type="search"
+                       value="{{ query }}" maxlength="100">
+            </p>
+            <button type="submit">Search</button>
+        </form>
+
+        <p>{{ count }} dresses found</p>
+
+        {% if products %}
+        <div class="admin-table">
+            <table aria-label="Dress inventory">
+                <thead>
+                    <tr>
+                        <th scope="col">Dress</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Stock by size</th>
+                        <th scope="col">Visibility</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            {{ product.name }}<br>
+                            <small>{{ product.product_id }}</small>
+                        </td>
+                        <td>{{ format_dkk(product.price_minor) }}</td>
+                        <td>
+                            {% for size, quantity in product.size_stock.items() %}
+                                {{ size }} {{ quantity }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ "Archived" if product.archived else "Visible" }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_product', product_id=product.product_id) }}"
+                               aria-label="Edit {{ product.name }}">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if last_page > 1 %}
+        <nav class="admin-pagination" aria-label="Catalogue pages">
+            {% if page > 1 %}
+            <a href="{{ url_for('admin_catalogue', q=query, page=page - 1) }}">
+                Previous
+            </a>
+            {% endif %}
+
+            <span>Page {{ page }} of {{ last_page }}</span>
+
+            {% if page < last_page %}
+            <a href="{{ url_for('admin_catalogue', q=query, page=page + 1) }}">
+                Next
+            </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </main>
+</body>
+</html>

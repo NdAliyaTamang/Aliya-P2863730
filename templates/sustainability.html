@@ -1,0 +1,261 @@
+{#
+  OwnableFit template notes
+  Collect the assumptions for one hypothetical return-reduction scenario.
+  Display the expected returns and emissions estimate calculated by Flask.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Sustainability Scenarios</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .scenario-panel {
+            margin-top: 24px;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .scenario-panel h2 {
+            margin-top: 0;
+        }
+
+        .scenario-help {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .scenario-results {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scenario-results caption {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .scenario-results th,
+        .scenario-results td {
+            padding: 14px 8px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .scenario-results th {
+            width: 65%;
+        }
+
+        .scenario-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .scenario-actions button {
+            flex: 1 1 220px;
+        }
+
+        .scenario-actions a {
+            padding: 12px;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dress size recommendation prototype</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Sustainability scenarios</h2>
+        <p>
+            Explore what could happen under assumptions about
+            size-related returns and emissions per return.
+        </p>
+        <p>
+            This calculator does not measure OwnableFit's impact.
+            Model accuracy is not converted into a return-reduction rate.
+        </p>
+
+        <details class="scenario-panel">
+            <summary>How the calculation works</summary>
+            <p>
+                Baseline size-related returns =
+                orders × size-related return rate.
+            </p>
+            <p>
+                Potential returns avoided =
+                baseline size-related returns × assumed relative reduction.
+            </p>
+            <p>
+                Potential emissions savings =
+                potential returns avoided × emissions per return.
+            </p>
+            <p>
+                Percentages are divided by 100 during calculation.
+                A 10% relative reduction in a 20% return rate produces
+                an 18% return rate.
+            </p>
+        </details>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to calculate</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if result is not none %}
+        <section class="scenario-panel" aria-labelledby="results-heading">
+            <h2 id="results-heading">Hypothetical scenario result</h2>
+
+            <table class="scenario-results">
+                <caption>Calculated from the assumptions shown below</caption>
+                <tbody>
+                    <tr>
+                        <th scope="row">Expected baseline size-related returns</th>
+                        <td>{{ "%.2f"|format(result["baseline_returns"]) }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Potential returns avoided</th>
+                        <td>{{ "%.2f"|format(result["avoided_returns"]) }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Expected remaining size-related returns</th>
+                        <td>{{ "%.2f"|format(result["remaining_returns"]) }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Potential emissions savings</th>
+                        <td>
+                            {{ "%.2f"|format(result["potential_kg_co2e_saved"]) }}
+                            kg CO₂e
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>
+                Fractional returns represent expected values.
+                These are scenario estimates, not observed outcomes.
+            </p>
+        </section>
+        {% endif %}
+
+        <h2>Scenario assumptions</h2>
+        <p>
+            Use the same period and order population throughout.
+            All fields are required. Assumptions remain visible after calculation.
+        </p>
+
+        <form method="post" action="{{ url_for('sustainability') }}">
+            <p>
+                <label for="orders">Number of orders</label>
+                <input
+                    type="number"
+                    id="orders"
+                    name="orders"
+                    min="0"
+                    step="1"
+                    value="{{ assumptions.get('orders', '') }}"
+                    required
+                >
+            </p>
+
+            <p>
+                <label for="return_rate">Size-related return rate (%)</label>
+                <input
+                    type="number"
+                    id="return_rate"
+                    name="return_rate"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('return_rate', '') }}"
+                    aria-describedby="return-rate-help"
+                    required
+                >
+                <small id="return-rate-help" class="scenario-help">
+                    Percentage of all orders assumed to be returned
+                    because of size, not the percentage of returns
+                    attributed to size.
+                </small>
+            </p>
+
+            <p>
+                <label for="reduction">Assumed relative reduction (%)</label>
+                <input
+                    type="number"
+                    id="reduction"
+                    name="reduction"
+                    min="0"
+                    max="100"
+                    step="any"
+                    value="{{ assumptions.get('reduction', '') }}"
+                    aria-describedby="reduction-help"
+                    required
+                >
+                <small id="reduction-help" class="scenario-help">
+                    A scenario assumption, not a measured model benefit.
+                </small>
+            </p>
+
+            <p>
+                <label for="impact">Emissions per return (kg CO₂e)</label>
+                <input
+                    type="number"
+                    id="impact"
+                    name="impact"
+                    min="0"
+                    step="any"
+                    value="{{ assumptions.get('impact', '') }}"
+                    aria-describedby="impact-help"
+                    required
+                >
+                <small id="impact-help" class="scenario-help">
+                    Document the source and activities covered by this
+                    factor before using results in the thesis.
+                </small>
+            </p>
+
+            <div class="scenario-actions">
+                <button type="submit">Calculate scenario</button>
+                <a href="{{ url_for('sustainability') }}">
+                    Clear scenario
+                </a>
+            </div>
+        </form>
+
+        <section class="scenario-panel">
+            <h2>Interpretation and limits</h2>
+            <p>
+                Results depend entirely on the supplied assumptions.
+                This calculation excludes implementation impacts,
+                changes in customer behaviour and other effects unless
+                explicitly represented in the assumptions.
+            </p>
+            <p>
+                Use low, medium and high assumptions to explore
+                sensitivity. Do not present a scenario as evidence
+                that the prototype has reduced returns or emissions.
+            </p>
+        </section>
+    </main>
+</body>
+</html>

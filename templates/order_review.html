@@ -1,0 +1,296 @@
+{#
+  OwnableFit template notes
+  Display the saved order lines, delivery details, and totals.
+  Use the order status to show the appropriate payment or confirmation action.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Order Review</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .review-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 24px;
+            align-items: start;
+            margin-top: 24px;
+        }
+
+        .review-panel {
+            padding: 24px;
+            margin-bottom: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .review-panel h2 {
+            margin-top: 0;
+        }
+
+        .review-reference,
+        .review-address {
+            overflow-wrap: anywhere;
+        }
+
+        .review-address {
+            font-style: normal;
+        }
+
+        .review-items {
+            padding: 0;
+            list-style: none;
+        }
+
+        .review-items li {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            overflow-wrap: anywhere;
+        }
+
+        .review-items small {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+        }
+
+        .review-totals {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+        }
+
+        .review-totals dt {
+            color: var(--muted);
+        }
+
+        .review-totals dd {
+            margin: 0;
+            text-align: right;
+        }
+
+        .review-total {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 650;
+        }
+
+        .review-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .review-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            font-weight: 600;
+        }
+
+        .payment-link,
+        .payment-link:visited {
+            display: block;
+            margin-top: 22px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 650;
+        }
+
+        .payment-link:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        @media (max-width: 800px) {
+            .review-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .review-totals {
+                grid-template-columns: 1fr;
+            }
+
+            .review-totals dd {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Review your order</h2>
+        <p>
+            Cart → Checkout → <strong>Order review</strong>
+            → Simulated payment → Confirmation
+        </p>
+
+        <p class="review-reference">
+            Order reference: <strong>{{ order["order_id"] }}</strong>
+        </p>
+
+        <p class="review-status">
+            {% if order["status"] == "pending_payment" %}
+                Awaiting simulated payment
+            {% elif order["status"] == "paid" %}
+                Simulated payment complete
+            {% else %}
+                Cancelled
+            {% endif %}
+        </p>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to continue</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        <div class="review-layout">
+            <div>
+                <section class="review-panel">
+                    <h2>Order items</h2>
+
+                    <ul class="review-items">
+                        {% for item in order["items"] %}
+                        <li>
+                            <strong>{{ item["product_name"] }}</strong>
+
+                            <small>
+                                Selected sample size:
+                                {{ item["selected_size"] }}
+                                · Quantity: {{ item["quantity"] }}
+                            </small>
+
+                            <small>
+                                Price per item:
+                                {{ format_dkk(item["unit_price_minor"]) }}
+                            </small>
+
+                            <p>
+                                Line total:
+                                {{ format_dkk(item["line_total_minor"]) }}
+                            </p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <p class="review-note">
+                        Sample shopping sizes were selected independently.
+                        They are not conversions of model dataset codes.
+                    </p>
+                </section>
+
+                <section class="review-panel">
+                    <h2>Contact details</h2>
+                    <p>{{ order["customer"]["full_name"] }}</p>
+                    <p>{{ order["customer"]["email"] }}</p>
+                </section>
+
+                <section class="review-panel">
+                    <h2>Delivery details</h2>
+                    <p><strong>{{ order["delivery_label"] }}</strong></p>
+
+                    <address class="review-address">
+                        {{ order["customer"]["address_line"] }}<br>
+                        {{ order["customer"]["postal_code"] }}
+                        {{ order["customer"]["city"] }}<br>
+                        {{ order["customer"]["country"] }}
+                    </address>
+
+                    <p class="review-note">
+                        Delivery and collection are illustrative.
+                        No shipment or collection appointment is arranged.
+                    </p>
+                </section>
+            </div>
+
+            <aside class="review-panel">
+                <h2>Order total</h2>
+
+                <dl class="review-totals">
+                    <dt>Merchandise</dt>
+                    <dd>{{ format_dkk(order["subtotal_minor"]) }}</dd>
+
+                    <dt>Delivery</dt>
+                    <dd>{{ format_dkk(order["delivery_minor"]) }}</dd>
+
+                    <dt class="review-total">Total</dt>
+                    <dd class="review-total">
+                        {{ format_dkk(order["total_minor"]) }}
+                    </dd>
+                </dl>
+
+                <p class="review-note">
+                    Prices and delivery charges are illustrative.
+                    No separate tax calculation is implemented.
+                    Payment is simulated; no money moves.
+                </p>
+
+                {% if order["status"] == "pending_payment" %}
+                <a
+                    class="payment-link"
+                    href="{{ url_for(
+                        'payment',
+                        order_id=order['order_id']
+                    ) }}"
+                >
+                    Continue to payment →
+                </a>
+
+                <p class="review-note">
+                    Choose success, decline or cancellation on the
+                    simulation page. Do not enter card details.
+                </p>
+
+                <p>
+                    To change delivery before payment, return to the cart,
+                    reopen checkout and resubmit your selection.
+                </p>
+                {% elif order["status"] == "paid" %}
+                <a
+                    class="payment-link"
+                    href="{{ url_for(
+                        'order_confirmation',
+                        order_id=order['order_id']
+                    ) }}"
+                >
+                    View confirmation →
+                </a>
+                {% endif %}
+
+                <p>
+                    <a href="{{ url_for('cart') }}">Return to cart</a>
+                </p>
+
+                <p class="review-note">
+                    Cart changes do not automatically update this saved
+                    order. Completed orders cannot be edited.
+                </p>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>

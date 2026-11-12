@@ -1,0 +1,181 @@
+{#
+  OwnableFit template notes
+  Summarize model coverage using values supplied by the Flask dashboard route.
+  Link visitors to the recommendation form, shop, model evaluation, and
+  sustainability tools.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .dashboard-stats,
+        .dashboard-grid {
+            display: grid;
+            gap: 20px;
+            margin: 28px 0;
+        }
+
+        .dashboard-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .dashboard-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-card {
+            padding: 26px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .dashboard-card h2 {
+            margin-top: 0;
+        }
+
+        .dashboard-card dt {
+            color: var(--muted);
+        }
+
+        .dashboard-card dd {
+            margin: 10px 0 0;
+            color: var(--primary);
+            font-size: 34px;
+            font-weight: 650;
+        }
+
+        .dashboard-action,
+        .dashboard-action:visited {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 13px 22px;
+            background: var(--primary);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .dashboard-action:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        @media (max-width: 700px) {
+            .dashboard-stats,
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Welcome to OwnableFit</h2>
+        <p>
+            Browse the catalogue, explore a dataset size prediction,
+            and manage your shopping selections.
+        </p>
+
+        <!-- A dedicated cart shortcut, separate from the navigation. -->
+        <section class="dashboard-card" aria-labelledby="cart-heading">
+            <h2 id="cart-heading">Your shopping cart</h2>
+            <p>Review selected dresses, sample sizes and quantities.</p>
+
+            <a class="dashboard-action" href="{{ url_for('cart') }}">
+                View cart →
+            </a>
+        </section>
+
+        <dl class="dashboard-stats">
+            <div class="dashboard-card">
+                <dt>Model-supported dress IDs</dt>
+                <dd>{{ dress_count }}</dd>
+            </div>
+
+            <div class="dashboard-card">
+                <dt>Bra-size categories</dt>
+                <dd>{{ bra_size_count }}</dd>
+            </div>
+
+            <div class="dashboard-card">
+                <dt>Dataset size codes</dt>
+                <dd>{{ size_code_count }}</dd>
+            </div>
+        </dl>
+
+        <div class="dashboard-grid">
+            <section class="dashboard-card">
+                <h2>Explore the dress catalogue</h2>
+                <p>
+                    Search and filter illustrative product presentations.
+                    Prices, styling and stock are fictional.
+                </p>
+                <a class="dashboard-action" href="{{ url_for('shop') }}">
+                    Browse dresses →
+                </a>
+            </section>
+
+            <section class="dashboard-card">
+                <h2>Get a size prediction</h2>
+                <p>
+                    Select a dataset item and enter measurements.
+                    Predictions do not have a verified XS–XL conversion.
+                </p>
+                <a class="dashboard-action" href="{{ url_for('home') }}">
+                    Get a prediction →
+                </a>
+            </section>
+
+            <section class="dashboard-card">
+                <h2>Model and evaluation</h2>
+                <p>{{ model_name }}</p>
+                <p>Customer-grouped held-out accuracy: {{ accuracy_percent }}%.</p>
+                <p>
+                    This is not a personal probability of fit.
+                    Most test dresses were seen during development.
+                </p>
+                <a class="dashboard-action" href="{{ url_for('evaluation') }}">
+                    View research evidence →
+                </a>
+            </section>
+
+            <section class="dashboard-card">
+                <h2>Sustainability scenarios</h2>
+                <p>
+                    Compare hypothetical return-reduction assumptions.
+                    Actual return or emissions reductions are unproven.
+                </p>
+                <a
+                    class="dashboard-action"
+                    href="{{ url_for('scenario_comparison') }}"
+                >
+                    Compare scenarios →
+                </a>
+            </section>
+        </div>
+
+        <p>
+            The traditional size-chart comparison remains unresolved.
+            Body measurements are not stored in the cart.
+        </p>
+    </main>
+</body>
+</html>

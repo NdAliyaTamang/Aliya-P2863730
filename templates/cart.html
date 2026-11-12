@@ -1,0 +1,334 @@
+{#
+  OwnableFit template notes
+  Display cart lines using the selected sizes, quantities, and totals supplied
+  by Flask.
+  Use protected forms to remove a line or clear the cart. Checkout opens
+  separately.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Cart</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .cart-progress {
+            margin: 18px 0 24px;
+            color: var(--muted);
+        }
+
+        .cart-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 24px;
+            align-items: start;
+            margin-top: 24px;
+        }
+
+        .cart-items {
+            display: grid;
+            gap: 18px;
+        }
+
+        .cart-item,
+        .cart-summary,
+        .cart-empty {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .cart-item h3 {
+            margin-top: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .cart-item dl,
+        .cart-totals {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px 18px;
+        }
+
+        .cart-item dt,
+        .cart-totals dt {
+            color: var(--muted);
+        }
+
+        .cart-item dd,
+        .cart-totals dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .cart-summary h2,
+        .cart-empty h2 {
+            margin-top: 0;
+        }
+
+        .cart-total {
+            color: var(--primary);
+            font-size: 25px;
+            font-weight: 650;
+        }
+
+        .cart-small {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Compact POST forms for remove and clear actions. */
+        .cart-action-form {
+            display: block;
+            margin-top: 18px;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .cart-action-form button {
+            width: 100%;
+        }
+
+        .cart-remove {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .cart-remove:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* Checkout is the primary next step in the shopping journey. */
+        .checkout-link,
+        .checkout-link:visited {
+            display: block;
+            margin-top: 24px;
+            padding: 15px 20px;
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 650;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .checkout-link:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        .cart-continue {
+            display: inline-block;
+            margin-top: 18px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 750px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .cart-item dl,
+            .cart-totals {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+
+            .cart-item dd,
+            .cart-totals dd {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Your cart</h2>
+
+        <p class="cart-progress">
+            <strong>Cart</strong>
+            → Contact and delivery
+            → Order review
+            → Test payment
+            → Confirmation
+        </p>
+
+        <p class="cart-small">
+            Product details, prices and stock are illustrative.
+            No real purchases or deliveries are made.
+        </p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <section role="status" aria-live="polite">
+                <h2>Cart update</h2>
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </section>
+            {% endif %}
+        {% endwith %}
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to update cart</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if cart_items %}
+        <div class="cart-layout">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <article class="cart-item">
+                    <h3>
+                        <a href="{{ url_for(
+                            'product_detail',
+                            product_id=item['product_id']
+                        ) }}">
+                            {{ item["name"] }}
+                        </a>
+                    </h3>
+
+                    <dl>
+                        <dt>Selected sample size</dt>
+                        <dd>{{ item["size"] }}</dd>
+
+                        <dt>Quantity</dt>
+                        <dd>{{ item["quantity"] }}</dd>
+
+                        <dt>Price per item</dt>
+                        <dd>{{ format_dkk(item["price_minor"]) }}</dd>
+
+                        <dt>Line total</dt>
+                        <dd>{{ format_dkk(item["line_total_minor"]) }}</dd>
+
+                        <dt>Product ID</dt>
+                        <dd>{{ item["product_id"] }}</dd>
+                    </dl>
+
+                    <p class="cart-small">
+                        The shopping size was selected by the user.
+                        It is not a verified conversion of the
+                        model's dataset size code.
+                    </p>
+
+                    <form
+                        class="cart-action-form"
+                        method="post"
+                        action="{{ url_for('remove_from_cart') }}"
+                    >
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token }}"
+                        >
+                        <input
+                            type="hidden"
+                            name="product_id"
+                            value="{{ item['product_id'] }}"
+                        >
+                        <input
+                            type="hidden"
+                            name="size"
+                            value="{{ item['size'] }}"
+                        >
+
+                        <button class="cart-remove" type="submit">
+                            Remove item
+                        </button>
+                    </form>
+                </article>
+                {% endfor %}
+
+                <a class="cart-continue" href="{{ url_for('shop') }}">
+                    ← Continue browsing
+                </a>
+            </div>
+
+            <aside class="cart-summary" aria-labelledby="summary-heading">
+                <h2 id="summary-heading">Cart summary</h2>
+
+                <dl class="cart-totals">
+                    <dt>Total quantity</dt>
+                    <dd>{{ total_quantity }}</dd>
+
+                    <dt>Merchandise subtotal</dt>
+                    <dd class="cart-total">
+                        {{ format_dkk(subtotal_minor) }}
+                    </dd>
+                </dl>
+
+                <p class="cart-small">
+                    Choose delivery at checkout. Its illustrative
+                    charge will be included in the order-review total.
+                </p>
+
+                <!-- Existing checkout route handles the next stage. -->
+                <a class="checkout-link" href="{{ url_for('checkout') }}">
+                    Proceed to checkout →
+                </a>
+
+                <p class="cart-small">
+                    Next: enter contact details and select delivery.
+                    Continuing to checkout does not charge money.
+                </p>
+
+                <form
+                    class="cart-action-form"
+                    method="post"
+                    action="{{ url_for('clear_cart') }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token }}"
+                    >
+
+                    <button class="cart-remove" type="submit">
+                        Clear cart
+                    </button>
+                </form>
+            </aside>
+        </div>
+
+        {% else %}
+        <section class="cart-empty">
+            <h2>Your cart is empty</h2>
+            <p>
+                Browse dresses, request a prediction and select
+                a sample shopping size to add an item.
+            </p>
+
+            <a class="checkout-link" href="{{ url_for('shop') }}">
+                Browse dresses
+            </a>
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

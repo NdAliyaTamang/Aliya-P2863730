@@ -1,0 +1,240 @@
+{#
+  OwnableFit template notes
+  List the orders supplied by Flask for the current customer or guest session.
+  Show an empty-state message when that session has no orders to display.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | My Orders</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .orders-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 26px;
+        }
+
+        .order-card,
+        .orders-empty {
+            padding: 26px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .order-card h3 {
+            margin: 0;
+            font-size: 18px;
+            overflow-wrap: anywhere;
+        }
+
+        .order-heading {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--background);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .order-status-paid {
+            background: #e8efe8;
+            border-color: #a6b7a6;
+            color: #304a35;
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px 20px;
+            margin: 22px 0;
+        }
+
+        .order-details dt {
+            color: var(--muted);
+        }
+
+        .order-details dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .order-total {
+            color: var(--primary);
+            font-size: 22px;
+            font-weight: 650;
+        }
+
+        .order-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .order-action,
+        .order-action:visited {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .order-action:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        .orders-note {
+            max-width: 780px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .orders-empty h2 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 500px) {
+            .order-details {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+
+            .order-details dd {
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>My orders</h2>
+
+        <p>
+            Review your saved orders, continue an unpaid order,
+            or open a completed simulation's confirmation.
+        </p>
+
+        <p class="orders-note">
+            This guest history belongs to the current browser session.
+            Clearing cookies, using another browser or losing the session
+            can remove access to it. An account-based history is not
+            implemented.
+        </p>
+
+        <p class="orders-note">
+            All payments are simulated. No money moves and no real
+            delivery or collection is arranged.
+        </p>
+
+        {% if orders %}
+        <div class="orders-list">
+            {% for order in orders %}
+            <article class="order-card">
+                <div class="order-heading">
+                    <h3>{{ order["order_id"] }}</h3>
+
+                    <span
+                        class="order-status{% if order['status'] == 'paid' %} order-status-paid{% endif %}"
+                    >
+                        {% if order["status"] == "paid" %}
+                            Simulated payment complete
+                        {% elif order["status"] == "pending_payment" %}
+                            Awaiting simulated payment
+                        {% elif order["status"] == "cancelled" %}
+                            Cancelled
+                        {% else %}
+                            Status unavailable
+                        {% endif %}
+                    </span>
+                </div>
+
+                <dl class="order-details">
+                    <dt>Created (UTC)</dt>
+                    <dd>
+                        <time datetime="{{ order['created_at'] }}">
+                            {{ order["created_at"][:19] | replace("T", " ") }}
+                        </time>
+                    </dd>
+
+                    <dt>Order total, including selected delivery</dt>
+                    <dd class="order-total">
+                        {{ format_dkk(order["total_minor"]) }}
+                    </dd>
+                </dl>
+
+                <div class="order-actions">
+                    <a
+                        class="order-action"
+                        href="{{ url_for(
+                            'order_review',
+                            order_id=order['order_id']
+                        ) }}"
+                    >
+                        View order
+                    </a>
+
+                    {% if order["status"] == "paid" %}
+                    <a href="{{ url_for(
+                        'order_confirmation',
+                        order_id=order['order_id']
+                    ) }}">
+                        View confirmation
+                    </a>
+                    {% elif order["status"] == "pending_payment" %}
+                    <a href="{{ url_for(
+                        'payment',
+                        order_id=order['order_id']
+                    ) }}">
+                        Continue to payment
+                    </a>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <section class="orders-empty">
+            <h2>No orders in this browser session</h2>
+            <p>
+                Browse dresses, add an item to your cart and complete
+                checkout to create an order.
+            </p>
+
+            <a class="order-action" href="{{ url_for('shop') }}">
+                Browse dresses
+            </a>
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

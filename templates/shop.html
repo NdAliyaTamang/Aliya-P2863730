@@ -1,0 +1,442 @@
+{#
+  OwnableFit template notes
+  Render the filtered catalogue and show sizes with positive stock.
+  The cart form uses the customer's chosen size. The optional recommendation
+  uses the linked dataset ID.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Dress Catalogue</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .shop-notice {
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            color: var(--muted);
+        }
+
+        .shop-filters {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .shop-filters > div {
+            min-width: 0;
+        }
+
+        .shop-search,
+        .shop-actions {
+            grid-column: 1 / -1;
+        }
+
+        .shop-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .shop-actions button {
+            flex: 0 1 auto;
+        }
+
+        .shop-actions a {
+            padding: 10px;
+            color: var(--primary);
+        }
+
+        .shop-summary {
+            margin: 24px 0;
+            color: var(--muted);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .product-card {
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .product-placeholder {
+            display: flex;
+            min-height: 150px;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--background);
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .product-content {
+            padding: 22px;
+        }
+
+        .product-content h3 {
+            margin: 12px 0;
+            font-size: 20px;
+        }
+
+        .sample-label {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .product-price {
+            color: var(--primary);
+            font-size: 21px;
+            font-weight: 650;
+        }
+
+        .product-facts {
+            margin: 16px 0;
+        }
+
+        .product-facts dt {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .product-facts dd {
+            margin: 0 0 8px;
+        }
+
+        .product-size-form {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 10px;
+            margin: 16px 0 0;
+            padding: 0;
+            border: 0;
+            box-shadow: none;
+        }
+
+        .product-note {
+            color: var(--muted);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .product-recommendation {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 0;
+            color: var(--primary);
+        }
+
+        .shop-empty {
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .shop-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 32px;
+        }
+
+        .shop-pagination a {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--primary);
+        }
+
+        @media (max-width: 850px) {
+            .product-grid,
+            .shop-filters {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 560px) {
+            .product-grid,
+            .shop-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .shop-actions button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Dress catalogue</h2>
+
+        <p class="shop-notice">
+            This catalogue presents model-supported dataset IDs with
+            illustrative product details. Names, styles, colours,
+            occasions, prices and stock are fictional.
+            Predictions concern the original dataset ID, not verified
+            properties of the displayed sample styling.
+            Sample XS–XL sizes have no verified mapping to predicted codes.
+        </p>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Check your filters</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        <form
+            class="shop-filters"
+            method="get"
+            action="{{ url_for('shop') }}"
+        >
+            <div class="shop-search">
+                <label for="product-search">Search dresses</label>
+                <input
+                    type="search"
+                    id="product-search"
+                    name="q"
+                    value="{{ filters.get('q', '') }}"
+                    placeholder="Search by display name or dress ID"
+                    maxlength="100"
+                >
+            </div>
+
+            {% for field, label, option_key in [
+                ('style', 'Dress style', 'styles'),
+                ('length', 'Length', 'lengths'),
+                ('occasion', 'Occasion', 'occasions'),
+                ('colour', 'Colour', 'colours'),
+                ('size', 'Available sample size', 'sizes')
+            ] %}
+            <div>
+                <label for="filter-{{ field }}">{{ label }}</label>
+                <select id="filter-{{ field }}" name="{{ field }}">
+                    <option value="">All</option>
+
+                    {% for option in options[option_key] %}
+                    <option
+                        value="{{ option }}"
+                        {% if filters.get(field, '') == option %}
+                        selected
+                        {% endif %}
+                    >
+                        {{ option }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endfor %}
+
+            <div>
+                <label for="min-price">Minimum price (DKK)</label>
+                <input
+                    type="number"
+                    id="min-price"
+                    name="min_price"
+                    min="0"
+                    max="1000000000"
+                    step="0.01"
+                    value="{{ filters.get('min_price', '') }}"
+                >
+            </div>
+
+            <div>
+                <label for="max-price">Maximum price (DKK)</label>
+                <input
+                    type="number"
+                    id="max-price"
+                    name="max_price"
+                    min="0"
+                    max="1000000000"
+                    step="0.01"
+                    value="{{ filters.get('max_price', '') }}"
+                >
+            </div>
+
+            <div>
+                <label for="product-sort">Sort by</label>
+                <select id="product-sort" name="sort">
+                    {% for value, label in sort_options.items() %}
+                    <option
+                        value="{{ value }}"
+                        {% if filters.get('sort', 'name_asc') == value %}
+                        selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="shop-actions">
+                <button type="submit">Apply filters</button>
+                <a href="{{ url_for('shop') }}">Clear all filters</a>
+            </div>
+        </form>
+
+        {% if not error %}
+        <p class="shop-summary">
+            {{ total_matches|default(products|length) }}
+            of {{ total_products }} items match.
+            Displayed stock and product attributes are illustrative.
+        </p>
+
+        {% if products %}
+        <div class="product-grid">
+            {% for product in products %}
+            <article class="product-card">
+                <div class="product-placeholder">
+                    Product image not supplied
+                </div>
+
+                <div class="product-content">
+                    <span class="sample-label">
+                        Illustrative product details
+                    </span>
+
+                    <h3 id="dress-{{ product['product_id'] }}">
+                        {{ product["name"] }}
+                    </h3>
+
+                    <p class="product-price">
+                        {{ format_dkk(product["price_minor"]) }}
+                    </p>
+
+                    <dl class="product-facts">
+                        <dt>Style and length</dt>
+                        <dd>
+                            {{ product["dress_style"] }}
+                            · {{ product["length"] }}
+                        </dd>
+
+                        <dt>Colour</dt>
+                        <dd>{{ product["colour"] }}</dd>
+
+                        <dt>Occasion</dt>
+                        <dd>{{ product["occasions"] | join(", ") }}</dd>
+                    </dl>
+
+                    {# Each stock entry is a (size, quantity) pair.
+                       Keep entries whose quantity is greater than zero. #}
+                    {% set available_sizes = product["size_stock"].items()
+                        | rejectattr("1", "le", 0) | list %}
+                    {% if available_sizes %}
+                    {# The catalogue adds one dress in the customer's chosen size.
+                       The cart validates the submitted product, size and quantity. #}
+                    <form
+                        class="product-size-form"
+                        method="post"
+                        action="{{ url_for('add_to_cart') }}"
+                        aria-labelledby="dress-{{ product['product_id'] }}"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="product_id"
+                               value="{{ product['product_id'] }}">
+                        <input type="hidden" name="quantity" value="1">
+
+                        <label for="size-{{ product['product_id'] }}">
+                            Choose your size
+                        </label>
+                        <select
+                            id="size-{{ product['product_id'] }}"
+                            name="size"
+                            required
+                        >
+                            <option value="" selected disabled>Select a size</option>
+                            {% for size, quantity in available_sizes %}
+                            <option value="{{ size }}">{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Add to cart</button>
+                    </form>
+                    {% else %}
+                    <p class="product-note">No sample stock available</p>
+                    {% endif %}
+
+                    {# The optional recommendation opens a separate page for
+                       this dataset dress ID. The customer chooses the cart size. #}
+                    {% if product.get("model_item_id") %}
+                    <p class="product-note">
+                        Dataset dress ID: {{ product["model_item_id"] }}
+                    </p>
+
+                    <a
+                        class="product-recommendation"
+                        href="{{ url_for(
+                            'home',
+                            item_id=product['model_item_id']
+                        ) }}"
+                    >
+                        Get size recommendation (optional)
+                    </a>
+                    {% else %}
+                    <p class="product-note">
+                        No verified model item mapping.
+                    </p>
+                    {% endif %}
+
+                    <p class="product-note">
+                        Product ID: {{ product["product_id"] }}
+                    </p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% if total_pages|default(1) > 1 %}
+        <nav class="shop-pagination" aria-label="Product catalogue pages">
+            {% if previous_url %}
+            <a href="{{ previous_url }}">Previous</a>
+            {% endif %}
+
+            <span>Page {{ page }} of {{ total_pages }}</span>
+
+            {% if next_url %}
+            <a href="{{ next_url }}">Next</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <section class="shop-empty">
+            <h2>No dresses match these filters</h2>
+            <p>
+                Remove a filter or clear all filters to browse
+                the collection.
+            </p>
+        </section>
+        {% endif %}
+        {% endif %}
+    </main>
+</body>
+</html>

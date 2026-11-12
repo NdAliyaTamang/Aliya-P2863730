@@ -1,0 +1,303 @@
+{#
+  OwnableFit template notes
+  List the dress IDs supported by the recommendation model with search and
+  pagination.
+  Each selection link sends the dress ID to the recommendation form as a query
+  parameter.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Dress Catalogue</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .catalogue-controls {
+            grid-template-columns: 2fr 1fr;
+            align-items: end;
+            padding: 24px;
+        }
+
+        .catalogue-controls > div {
+            min-width: 0;
+        }
+
+        .catalogue-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .catalogue-actions button {
+            flex: 0 1 auto;
+        }
+
+        .catalogue-actions a {
+            padding: 10px;
+            color: var(--primary);
+        }
+
+        .catalogue-summary {
+            margin: 24px 0;
+            color: var(--muted);
+        }
+
+        .dress-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .dress-card {
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .dress-placeholder {
+            display: flex;
+            min-height: 150px;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--background);
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .dress-content {
+            padding: 22px;
+        }
+
+        .dress-content h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            overflow-wrap: anywhere;
+        }
+
+        .dress-content p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .dress-action {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 11px 16px;
+            background: var(--primary);
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .dress-action:hover {
+            background: var(--primary-hover);
+            color: #ffffff;
+        }
+
+        .catalogue-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 32px;
+        }
+
+        .catalogue-pagination a {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--primary);
+        }
+
+        .catalogue-empty {
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        @media (max-width: 850px) {
+            .dress-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .catalogue-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .dress-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .catalogue-actions button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dress size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Dress catalogue</h2>
+        <p>
+            Browse supported dresses, select an item and request
+            a predicted dataset size code.
+        </p>
+        <p>
+            Items currently use dataset IDs. Verified product photographs,
+            names, prices and retail availability have not been supplied.
+        </p>
+
+        <!-- Search and sorting contain no body measurements. -->
+        <form
+            class="catalogue-controls"
+            method="get"
+            action="{{ url_for('catalogue') }}"
+        >
+            <!-- Always search anywhere within the ID.
+                 This also resets any previous Starts with selection. -->
+            <input type="hidden" name="match" value="contains">
+
+            <div>
+                <label for="dress-search">Search dress IDs</label>
+                <input
+                    type="search"
+                    id="dress-search"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Enter all or part of an ID"
+                    maxlength="100"
+                    aria-describedby="search-help"
+                >
+                <small id="search-help">
+                    Finds IDs containing the text you enter.
+                </small>
+            </div>
+
+            <div>
+                <label for="sort-order">Sort dress IDs</label>
+                <select id="sort-order" name="sort">
+                    <option
+                        value="asc"
+                        {% if sort_order|default('asc') == 'asc' %}
+                        selected
+                        {% endif %}
+                    >
+                        Lowest first
+                    </option>
+                    <option
+                        value="desc"
+                        {% if sort_order|default('asc') == 'desc' %}
+                        selected
+                        {% endif %}
+                    >
+                        Highest first
+                    </option>
+                </select>
+            </div>
+
+            <div class="catalogue-actions">
+                <button type="submit">Apply</button>
+                <a href="{{ url_for('catalogue') }}">
+                    Clear search and sorting
+                </a>
+            </div>
+        </form>
+
+        <p class="catalogue-summary">
+            {{ total_matches }} matching items
+            out of {{ total_dresses }} supported dress IDs.
+        </p>
+
+        {% if items %}
+        <div class="dress-grid">
+            {% for item_id in items %}
+            <article class="dress-card">
+                <div class="dress-placeholder">
+                    Verified product image unavailable
+                </div>
+
+                <div class="dress-content">
+                    <h3>Dress ID {{ item_id }}</h3>
+                    <p>
+                        Size-code prediction available using the saved
+                        model. A prediction does not guarantee fit.
+                    </p>
+
+                    <a
+                        class="dress-action"
+                        href="{{ url_for('home', item_id=item_id) }}"
+                    >
+                        Select this dress
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Keep the search and sorting when moving between pages. -->
+        <nav class="catalogue-pagination" aria-label="Catalogue pages">
+            {% if page > 1 %}
+            <a href="{{ url_for(
+                'catalogue',
+                q=query,
+                match='contains',
+                sort=sort_order|default('asc'),
+                page=page - 1
+            ) }}">
+                Previous
+            </a>
+            {% endif %}
+
+            <span>Page {{ page }} of {{ total_pages }}</span>
+
+            {% if page < total_pages %}
+            <a href="{{ url_for(
+                'catalogue',
+                q=query,
+                match='contains',
+                sort=sort_order|default('asc'),
+                page=page + 1
+            ) }}">
+                Next
+            </a>
+            {% endif %}
+        </nav>
+
+        {% else %}
+        <section class="catalogue-empty">
+            <h2>No matching dress IDs</h2>
+            <p>
+                Try a shorter search or clear the search to browse
+                all supported items.
+            </p>
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

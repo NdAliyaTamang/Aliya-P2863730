@@ -1,0 +1,209 @@
+{#
+  OwnableFit template notes
+  Present the saved model's configuration, held-out accuracy, and evaluation
+  limitations.
+  Explain how the prediction pipeline uses inputs and why the size-chart
+  comparison is open.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Model and Evaluation</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .evaluation-panel {
+            margin-top: 24px;
+            padding: 26px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .evaluation-panel h2 {
+            margin-top: 0;
+        }
+
+        .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .evaluation-table caption {
+            margin-bottom: 14px;
+            text-align: left;
+            color: var(--muted);
+        }
+
+        .evaluation-table th,
+        .evaluation-table td {
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+        }
+
+        .evaluation-table th {
+            width: 45%;
+            font-weight: 600;
+        }
+
+        .evaluation-panel li {
+            margin-bottom: 12px;
+        }
+
+        .evaluation-note {
+            color: var(--muted);
+        }
+
+        @media (max-width: 640px) {
+            .evaluation-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dress size recommendation prototype</p>
+    </header>
+
+    <main>
+        <!-- All pages now use the same navigation file. -->
+        {% include "navigation.html" %}
+
+        <h2>Model and evaluation</h2>
+        <p>
+            Understand what the model predicts, how its performance was
+            assessed, and which conclusions remain unsupported.
+        </p>
+
+        <section class="evaluation-panel" aria-labelledby="model-heading">
+            <h2 id="model-heading">Model specification</h2>
+
+            <table class="evaluation-table">
+                <caption>Facts from the exported model metadata</caption>
+                <tbody>
+                    <tr>
+                        <th scope="row">Model</th>
+                        <td>{{ metadata["model"] }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Regularisation parameter C</th>
+                        <td>{{ metadata["C"] }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Training partition</th>
+                        <td>{{ metadata["training_partition"] }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Prediction target</th>
+                        <td>{{ metadata["target"] }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Number of target size codes</th>
+                        <td>{{ metadata["size_codes"] | length }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="evaluation-panel" aria-labelledby="results-heading">
+            <h2 id="results-heading">Held-out performance</h2>
+
+            <table class="evaluation-table">
+                <caption>Customer-grouped held-out evaluation</caption>
+                <tbody>
+                    <tr>
+                        <th scope="row">Accuracy</th>
+                        <td>{{ accuracy_percent }}%</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Traditional size-chart comparison</th>
+                        <td>Unresolved</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>
+                Accuracy measures how often the predicted code matched
+                the recorded target code across evaluated records.
+                It is not a personal probability that a dress will fit.
+            </p>
+
+            <p>
+                Customers were grouped when separating development and
+                held-out data. Most test dresses were seen during
+                development, so these results mainly concern new
+                customers choosing known dresses.
+            </p>
+        </section>
+
+        <section class="evaluation-panel" aria-labelledby="inputs-heading">
+            <h2 id="inputs-heading">From form to prediction</h2>
+
+            <ol>
+                <li>
+                    The backend validates the selected dress ID,
+                    bra-size category and numeric measurements.
+                </li>
+                <li>
+                    The exported helper prepares height, weight and
+                    bra-size values and converts the dress ID into
+                    the pipeline's dress-item category.
+                </li>
+                <li>
+                    The saved pipeline applies its fitted preprocessing
+                    and predicts one original dataset size code.
+                </li>
+            </ol>
+
+            <p class="evaluation-note">
+                Submitting the form does not retrain or tune the model.
+                Numeric validation currently checks for finite, positive
+                measurements; it does not establish that an input is
+                within the model's development-data range.
+            </p>
+        </section>
+
+        <section class="evaluation-panel" aria-labelledby="limits-heading">
+            <h2 id="limits-heading">Documented limitations</h2>
+
+            <ul>
+                {% for limitation in metadata["limitations"] %}
+                <li>{{ limitation }}</li>
+                {% endfor %}
+            </ul>
+
+            <p>
+                The prototype does not establish reduced commercial
+                returns or measured environmental savings.
+                Those outcomes require additional evidence.
+            </p>
+        </section>
+
+        <section class="evaluation-panel" aria-labelledby="success-heading">
+            <h2 id="success-heading">Research success criterion</h2>
+
+            <p>
+                The project contract defines success as an accuracy
+                improvement of at least five percentage points over
+                a traditional size-chart baseline on the same test data.
+            </p>
+
+            <p>
+                Because that comparison remains unresolved, this
+                criterion cannot currently be declared achieved.
+            </p>
+        </section>
+    </main>
+</body>
+</html>

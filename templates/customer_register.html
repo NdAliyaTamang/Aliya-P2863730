@@ -1,0 +1,158 @@
+{#
+  OwnableFit template notes
+  Collect the details needed to create a customer account.
+  Send them to Flask for validation and display any form errors returned by
+  the server.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Create Account</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .account-container {
+            max-width: 580px;
+            margin: 36px auto;
+        }
+
+        .account-form {
+            grid-template-columns: 1fr;
+        }
+
+        .account-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .account-links {
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        <div class="account-container">
+            <h2>Create your account</h2>
+
+            <p>
+                Create an OwnableFit account to access orders placed
+                while signed in, including from another browser.
+            </p>
+
+            <p class="account-note">
+                This local prototype does not verify email ownership
+                or send account emails. Use fictional details during testing.
+            </p>
+
+            {% if error %}
+            <section role="alert">
+                <h2>Unable to create account</h2>
+                <p>{{ error }}</p>
+            </section>
+            {% endif %}
+
+            <form
+                class="account-form"
+                method="post"
+                action="{{ url_for('customer_register') }}"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <p>
+                    <label for="display-name">Name</label>
+                    <input
+                        type="text"
+                        id="display-name"
+                        name="display_name"
+                        maxlength="120"
+                        autocomplete="name"
+                        value="{{ values.get('display_name', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="customer-email">Email address</label>
+                    <input
+                        type="email"
+                        id="customer-email"
+                        name="email"
+                        maxlength="254"
+                        autocomplete="email"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        value="{{ values.get('email', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="customer-password">
+                        Create an OwnableFit password
+                    </label>
+                    <input
+                        type="password"
+                        id="customer-password"
+                        name="password"
+                        minlength="15"
+                        maxlength="256"
+                        autocomplete="new-password"
+                        aria-describedby="password-help"
+                        required
+                    >
+                </p>
+
+                <p id="password-help" class="account-note">
+                    Use a unique password or passphrase containing at
+                    least 15 characters. Do not use your email-account password.
+                    Password recovery is not implemented yet.
+                </p>
+
+                <p>
+                    <label for="password-confirmation">Repeat password</label>
+                    <input
+                        type="password"
+                        id="password-confirmation"
+                        name="password_confirmation"
+                        minlength="15"
+                        maxlength="256"
+                        autocomplete="new-password"
+                        required
+                    >
+                </p>
+
+                <button type="submit">Create account</button>
+            </form>
+
+            <div class="account-links">
+                <p>
+                    Already registered?
+                    <a href="{{ url_for('customer_login') }}">Sign in</a>
+                </p>
+
+                <p>
+                    <a href="{{ url_for('shop') }}">
+                        Continue browsing as a guest
+                    </a>
+                </p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

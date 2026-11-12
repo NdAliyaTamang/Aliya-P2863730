@@ -1,0 +1,300 @@
+{#
+  OwnableFit template notes
+  Collect delivery details and show the cart summary before creating the
+  order.
+  Submit a session form token and checkout token so Flask can validate the
+  request.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Checkout</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .checkout-form {
+            margin-top: 0;
+        }
+
+        .checkout-wide {
+            grid-column: 1 / -1;
+        }
+
+        .checkout-form h3 {
+            margin: 0;
+        }
+
+        .checkout-summary {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .checkout-summary h2 {
+            margin-top: 0;
+        }
+
+        .checkout-items {
+            padding: 0;
+            list-style: none;
+        }
+
+        .checkout-items li {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            overflow-wrap: anywhere;
+        }
+
+        .checkout-items small {
+            display: block;
+            color: var(--muted);
+        }
+
+        .checkout-subtotal {
+            font-size: 22px;
+            font-weight: 650;
+            color: var(--primary);
+        }
+
+        .checkout-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .checkout-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .checkout-actions button {
+            flex: 1 1 220px;
+        }
+
+        @media (max-width: 800px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Checkout</h2>
+        <p>Contact and delivery → Order review → Test payment → Confirmation</p>
+
+        <p class="checkout-note">
+            Products, stock and delivery charges are illustrative.
+            Use fictional contact and address details during testing.
+            Do not enter card details on this page.
+        </p>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Check your checkout details</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        <div class="checkout-layout">
+            <form
+                class="checkout-form"
+                method="post"
+                action="{{ url_for('checkout') }}"
+            >
+                <!-- The backend supplies both tokens. -->
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+                <input
+                    type="hidden"
+                    name="checkout_token"
+                    value="{{ checkout_token }}"
+                >
+
+                <div class="checkout-wide">
+                    <h3>Contact information</h3>
+                </div>
+
+                <p>
+                    <label for="full-name">Full name</label>
+                    <input
+                        type="text"
+                        id="full-name"
+                        name="full_name"
+                        maxlength="120"
+                        autocomplete="name"
+                        value="{{ values.get('full_name', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        maxlength="254"
+                        autocomplete="email"
+                        value="{{ values.get('email', '') }}"
+                        required
+                    >
+                </p>
+
+                <div class="checkout-wide">
+                    <h3>Address</h3>
+                    <p class="checkout-note">
+                        Address fields are required for this prototype,
+                        including when collection is selected.
+                    </p>
+                </div>
+
+                <p class="checkout-wide">
+                    <label for="address-line">Street address</label>
+                    <input
+                        type="text"
+                        id="address-line"
+                        name="address_line"
+                        maxlength="200"
+                        autocomplete="address-line1"
+                        value="{{ values.get('address_line', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="city">City</label>
+                    <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        maxlength="100"
+                        autocomplete="address-level2"
+                        value="{{ values.get('city', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="postal-code">Postal code</label>
+                    <input
+                        type="text"
+                        id="postal-code"
+                        name="postal_code"
+                        maxlength="20"
+                        autocomplete="postal-code"
+                        value="{{ values.get('postal_code', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="country">Country</label>
+                    <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        maxlength="80"
+                        autocomplete="country-name"
+                        value="{{ values.get('country', '') }}"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="delivery-method">Delivery option</label>
+                    <select
+                        id="delivery-method"
+                        name="delivery_method"
+                        required
+                    >
+                        <option value="" disabled
+                            {% if not values.get('delivery_method') %}
+                            selected
+                            {% endif %}
+                        >
+                            Choose delivery
+                        </option>
+
+                        {% for key, option in delivery_options.items() %}
+                        <option
+                            value="{{ key }}"
+                            {% if values.get('delivery_method') == key %}
+                            selected
+                            {% endif %}
+                        >
+                            {{ option["label"] }}
+                            — {{ format_dkk(option["price_minor"]) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </p>
+
+                <p class="checkout-wide checkout-note">
+                    Continuing creates a pending order for review.
+                    It does not charge money or reserve stock.
+                    Checkout details will be stored with the order;
+                    body measurements will not.
+                </p>
+
+                <div class="checkout-wide checkout-actions">
+                    <button type="submit">Continue to order review</button>
+                    <a href="{{ url_for('cart') }}">Back to cart</a>
+                </div>
+            </form>
+
+            <aside class="checkout-summary" aria-labelledby="summary-heading">
+                <h2 id="summary-heading">Your items</h2>
+
+                <ul class="checkout-items">
+                    {% for item in cart_items %}
+                    <li>
+                        <strong>{{ item["name"] }}</strong>
+                        <small>
+                            Sample size {{ item["size"] }}
+                            · Quantity {{ item["quantity"] }}
+                        </small>
+                        {{ format_dkk(item["line_total_minor"]) }}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <p>Merchandise subtotal</p>
+                <p class="checkout-subtotal">
+                    {{ format_dkk(subtotal_minor) }}
+                </p>
+
+                <p class="checkout-note">
+                    Your selected delivery charge and final prototype
+                    total will appear on the order-review page.
+                </p>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>

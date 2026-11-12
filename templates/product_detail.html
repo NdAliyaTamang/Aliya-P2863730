@@ -1,0 +1,281 @@
+{#
+  OwnableFit template notes
+  Show the selected dress and offer a size and quantity for the cart.
+  Send the product ID and selection to Flask, which validates the request
+  against current stock.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product["name"] }} | OwnableFit</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .product-back {
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        .detail-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .detail-image {
+            display: flex;
+            min-height: 360px;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .detail-content {
+            min-width: 0;
+        }
+
+        .detail-content h2 {
+            margin-top: 12px;
+        }
+
+        .detail-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .detail-price {
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 650;
+        }
+
+        .detail-facts dt {
+            margin-top: 14px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .detail-facts dd {
+            margin: 4px 0 0;
+        }
+
+        .detail-cart-form {
+            grid-template-columns: 1fr;
+            padding: 24px;
+        }
+
+        .detail-help {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .detail-notice {
+            margin-top: 28px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+        }
+
+        .detail-notice h2 {
+            margin-top: 0;
+            font-size: 23px;
+        }
+
+        .detail-notice p {
+            color: var(--muted);
+        }
+
+        .detail-model-link {
+            display: inline-block;
+            margin-top: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .detail-layout {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .detail-image {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <a class="product-back" href="{{ url_for('shop') }}">
+            ← Back to dress catalogue
+        </a>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to add item</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        <div class="detail-layout">
+            <div class="detail-image">
+                Product image not supplied
+            </div>
+
+            <div class="detail-content">
+                <span class="detail-badge">
+                    Illustrative product details
+                </span>
+
+                <h2>{{ product["name"] }}</h2>
+
+                <p class="detail-price">
+                    {{ format_dkk(product["price_minor"]) }}
+                </p>
+
+                <dl class="detail-facts">
+                    <dt>Dress style</dt>
+                    <dd>{{ product["dress_style"] }}</dd>
+
+                    <dt>Length</dt>
+                    <dd>{{ product["length"] }}</dd>
+
+                    <dt>Colour</dt>
+                    <dd>{{ product["colour"] }}</dd>
+
+                    <dt>Occasion</dt>
+                    <dd>{{ product["occasions"] | join(", ") }}</dd>
+
+                    <dt>Product ID</dt>
+                    <dd>{{ product["product_id"] }}</dd>
+                </dl>
+
+                <!-- The backend will check size, quantity and stock.
+                     Price is read from the catalogue, not this form. -->
+                <form
+                    class="detail-cart-form"
+                    method="post"
+                    action="{{ url_for('add_to_cart') }}"
+                >
+                    <!-- Protect cart changes against cross-site requests. -->
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="product_id"
+                        value="{{ product['product_id'] }}"
+                    >
+
+                    <div>
+                        <label for="selected-size">Choose a sample size</label>
+                        <select
+                            id="selected-size"
+                            name="size"
+                            aria-describedby="size-help"
+                            required
+                        >
+                            <option value="" selected disabled>
+                                Select a size
+                            </option>
+
+                            {% for size, quantity in product["size_stock"].items() %}
+                            <option
+                                value="{{ size }}"
+                                {% if quantity <= 0 %}disabled{% endif %}
+                            >
+                                {{ size }}
+                                {% if quantity <= 0 %}
+                                — unavailable
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <small id="size-help" class="detail-help">
+                            XS–XL labels and stock are illustrative.
+                            Choose independently of the model's dataset code.
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="quantity">Quantity</label>
+                        <input
+                            type="number"
+                            id="quantity"
+                            name="quantity"
+                            min="1"
+                            max="7"
+                            step="1"
+                            value="1"
+                            aria-describedby="quantity-help"
+                            required
+                        >
+
+                        <small id="quantity-help" class="detail-help">
+                            The requested quantity must be available
+                            for the selected sample size.
+                        </small>
+                    </div>
+
+                    <button type="submit">Add to cart</button>
+                </form>
+
+                {% if product.get("model_item_id") %}
+                <a
+                    class="detail-model-link"
+                    href="{{ url_for(
+                        'home',
+                        item_id=product['model_item_id']
+                    ) }}"
+                >
+                    Explore the dataset size prediction
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <section class="detail-notice">
+            <h2>About this product presentation</h2>
+            <p>
+                Names, styles, colours, occasions, prices and stock
+                are fictional attributes used to develop shopping features.
+                Purchases and payments are unavailable.
+            </p>
+            <p>
+                The linked model recognises the original dataset item ID.
+                Its prediction does not validate the fictional styling,
+                map to XS–XL or guarantee fit.
+            </p>
+        </section>
+    </main>
+</body>
+</html>

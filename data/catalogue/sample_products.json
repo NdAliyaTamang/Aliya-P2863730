@@ -1,0 +1,103 @@
+{
+  "catalogue_kind": "sample",
+  "description": "Fictional products for developing and testing shopping features. Prices and stock are illustrative. Size labels have no mapping to the research model's dataset codes.",
+  "currency": "DKK",
+  "products": [
+    {
+      "product_id": "SAMPLE-001",
+      "name": "Rose Wrap Dress",
+      "dress_style": "Wrap",
+      "length": "Midi",
+      "occasions": ["Casual", "Work"],
+      "colour": "Rose",
+      "price_minor": 59900,
+      "size_stock": {"XS": 2, "S": 4, "M": 3, "L": 0, "XL": 1},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-002",
+      "name": "Midnight A-Line Dress",
+      "dress_style": "A-line",
+      "length": "Maxi",
+      "occasions": ["Evening", "Wedding guest"],
+      "colour": "Navy",
+      "price_minor": 89900,
+      "size_stock": {"XS": 1, "S": 2, "M": 3, "L": 2, "XL": 0},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-003",
+      "name": "Ivory Shirt Dress",
+      "dress_style": "Shirt dress",
+      "length": "Midi",
+      "occasions": ["Casual", "Work"],
+      "colour": "Ivory",
+      "price_minor": 64900,
+      "size_stock": {"XS": 0, "S": 3, "M": 4, "L": 2, "XL": 2},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-004",
+      "name": "Black Fitted Dress",
+      "dress_style": "Bodycon",
+      "length": "Mini",
+      "occasions": ["Evening"],
+      "colour": "Black",
+      "price_minor": 49900,
+      "size_stock": {"XS": 2, "S": 3, "M": 0, "L": 2, "XL": 1},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-005",
+      "name": "Sage Slip Dress",
+      "dress_style": "Slip",
+      "length": "Maxi",
+      "occasions": ["Evening", "Wedding guest"],
+      "colour": "Sage",
+      "price_minor": 79900,
+      "size_stock": {"XS": 1, "S": 2, "M": 2, "L": 3, "XL": 1},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-006",
+      "name": "Blue Shift Dress",
+      "dress_style": "Shift",
+      "length": "Mini",
+      "occasions": ["Casual", "Work"],
+      "colour": "Blue",
+      "price_minor": 44900,
+      "size_stock": {"XS": 3, "S": 0, "M": 4, "L": 2, "XL": 1},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-007",
+      "name": "Black Wrap Dress",
+      "dress_style": "Wrap",
+      "length": "Midi",
+      "occasions": ["Work", "Evening"],
+      "colour": "Black",
+      "price_minor": 69900,
+      "size_stock": {"XS": 1, "S": 3, "M": 2, "L": 2, "XL": 2},
+      "model_item_id": null,
+      "is_sample": true
+    },
+    {
+      "product_id": "SAMPLE-008",
+      "name": "Rose A-Line Dress",
+      "dress_style": "A-line",
+      "length": "Mini",
+      "occasions": ["Casual", "Wedding guest"],
+      "colour": "Rose",
+      "price_minor": 54900,
+      "size_stock": {"XS": 2, "S": 2, "M": 3, "L": 1, "XL": 0},
+      "model_item_id": null,
+      "is_sample": true
+    }
+  ]
+}

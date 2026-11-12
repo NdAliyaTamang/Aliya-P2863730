@@ -1,0 +1,15 @@
+/instance/
+/dataset/
+/data/processed/
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+__MACOSX/
+.vscode/

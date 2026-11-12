@@ -1,0 +1,138 @@
+{#
+  OwnableFit template notes
+  Collect the customer's email and password and submit them to the sign-in
+  route.
+  Use the server's response to display an error when the sign-in attempt
+  fails.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Sign In</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .account-container {
+            max-width: 540px;
+            margin: 36px auto;
+        }
+
+        .account-form {
+            grid-template-columns: 1fr;
+        }
+
+        .account-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .account-links {
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        <div class="account-container">
+            <h2>Welcome back</h2>
+
+            <p>
+                Sign in to your OwnableFit customer account to access
+                orders placed while signed in.
+            </p>
+
+            {% if message %}
+            <section role="status">
+                <h2>Account update</h2>
+                <p>{{ message }}</p>
+            </section>
+            {% endif %}
+
+            {% if error %}
+            <section role="alert">
+                <h2>Unable to sign in</h2>
+                <p>{{ error }}</p>
+            </section>
+            {% endif %}
+
+            <form
+                class="account-form"
+                method="post"
+                action="{{ url_for('customer_login') }}"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
+                >
+
+                <p>
+                    <label for="customer-email">Email address</label>
+                    <input
+                        type="email"
+                        id="customer-email"
+                        name="email"
+                        maxlength="254"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        required
+                    >
+                </p>
+
+                <p>
+                    <label for="customer-password">OwnableFit password</label>
+                    <input
+                        type="password"
+                        id="customer-password"
+                        name="password"
+                        maxlength="256"
+                        autocomplete="current-password"
+                        aria-describedby="login-help"
+                        required
+                    >
+                </p>
+
+                <p id="login-help" class="account-note">
+                    Use the password you created for OwnableFit,
+                    not your Gmail or other email-provider password.
+                </p>
+
+                <button type="submit">Sign in</button>
+            </form>
+
+            <p class="account-note">
+                Repeated failed attempts temporarily lock the account.
+                Email verification and password recovery are not
+                implemented in this local prototype.
+            </p>
+
+            <div class="account-links">
+                <p>
+                    New to OwnableFit?
+                    <a href="{{ url_for('customer_register') }}">
+                        Create an account
+                    </a>
+                </p>
+
+                <p>
+                    <a href="{{ url_for('shop') }}">
+                        Continue browsing as a guest
+                    </a>
+                </p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

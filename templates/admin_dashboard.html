@@ -1,0 +1,159 @@
+{#
+  OwnableFit template notes
+  Display the order counts, simulated paid totals, and recent orders supplied
+  by Flask.
+  Manage dresses opens the catalogue editor. Sign-out submits a protected
+  form.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administration | OwnableFit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .admin-logout {
+            display: block;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .admin-stat, .admin-panel {
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .admin-stat dd {
+            margin: 8px 0 0;
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 650;
+        }
+        .admin-panel { margin-top: 24px; }
+        .admin-panel h2 { margin-top: 0; }
+        .admin-note { color: var(--muted); }
+        .admin-table-container { overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table caption { padding-bottom: 12px; text-align: left; }
+        .admin-table th, .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .admin-reference { overflow-wrap: anywhere; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Store administration</p>
+    </header>
+
+    <main>
+        <div class="admin-toolbar">
+            <p>Signed in as <strong>{{ admin.username }}</strong></p>
+
+            <nav aria-label="Administration">
+                <a href="{{ url_for('admin_catalogue') }}">Manage dresses</a>
+                <a href="{{ url_for('shop') }}">View storefront</a>
+            </nav>
+
+            {# Signing out changes the session, so it uses a protected POST. #}
+            <form class="admin-logout" method="post"
+                  action="{{ url_for('admin_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit">Sign out</button>
+            </form>
+        </div>
+
+        <h2>Store overview</h2>
+        <p class="admin-note">Payments and order totals are simulated.</p>
+
+        <dl class="admin-stats">
+            <div class="admin-stat">
+                <dt>Total orders</dt>
+                <dd>{{ stats.total_orders }}</dd>
+            </div>
+            <div class="admin-stat">
+                <dt>Awaiting payment</dt>
+                <dd>{{ stats.pending_orders }}</dd>
+            </div>
+            <div class="admin-stat">
+                <dt>Simulation-paid orders</dt>
+                <dd>{{ stats.paid_orders }}</dd>
+            </div>
+            <div class="admin-stat">
+                <dt>Payment simulation attempts</dt>
+                <dd>{{ stats.payment_attempts }}</dd>
+            </div>
+        </dl>
+
+        <section class="admin-panel">
+            <h2>Simulated paid order value</h2>
+            <p><strong>{{ format_dkk(stats.paid_total_minor) }}</strong></p>
+            <p class="admin-note">Includes delivery charges on orders marked paid.</p>
+        </section>
+
+        <section class="admin-panel">
+            <h2>Recent orders</h2>
+
+            {% if recent_orders %}
+            {% set status_labels = {
+                "paid": "Simulated payment complete",
+                "pending_payment": "Awaiting payment",
+                "cancelled": "Cancelled"
+            } %}
+            <div class="admin-table-container" role="region"
+                 aria-label="Recent orders" tabindex="0">
+                <table class="admin-table">
+                    <caption>Up to 20 most recently created orders</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Order reference</th>
+                            <th scope="col">Created (UTC)</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Delivery</th>
+                            <th scope="col">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <th scope="row" class="admin-reference">{{ order.order_id }}</th>
+                            <td>
+                                <time datetime="{{ order.created_at }}">
+                                    {{ order.created_at[:19] | replace("T", " ") }}
+                                </time>
+                            </td>
+                            <td>{{ status_labels.get(order.status, "Status unavailable") }}</td>
+                            <td>{{ order.delivery_label }}</td>
+                            <td>{{ format_dkk(order.total_minor) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>Orders will appear here after a customer completes checkout.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

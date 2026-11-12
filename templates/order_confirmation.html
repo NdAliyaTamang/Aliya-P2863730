@@ -1,0 +1,249 @@
+{#
+  OwnableFit template notes
+  Display the saved order reference, item sizes, and totals after simulated
+  payment.
+  Use the order information supplied by Flask to show what the customer
+  ordered.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Order Confirmation</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .confirmation-banner {
+            padding: 28px;
+            margin: 24px 0;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #eee4df;
+        }
+
+        .confirmation-banner h2 {
+            margin-top: 0;
+        }
+
+        .confirmation-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .confirmation-panel {
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .confirmation-panel h2 {
+            margin-top: 0;
+        }
+
+        .confirmation-items {
+            padding: 0;
+            list-style: none;
+        }
+
+        .confirmation-items li {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            overflow-wrap: anywhere;
+        }
+
+        .confirmation-items small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+        }
+
+        .confirmation-totals {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+        }
+
+        .confirmation-totals dt {
+            color: var(--muted);
+        }
+
+        .confirmation-totals dd {
+            margin: 0;
+            text-align: right;
+        }
+
+        .confirmation-total {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 650;
+        }
+
+        .confirmation-reference {
+            overflow-wrap: anywhere;
+        }
+
+        .confirmation-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .confirmation-action,
+        .confirmation-action:visited {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .confirmation-action:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        @media (max-width: 800px) {
+            .confirmation-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .confirmation-totals {
+                grid-template-columns: 1fr;
+            }
+
+            .confirmation-totals dd {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <p>
+            Cart → Checkout → Order review → Simulated payment →
+            <strong>Confirmation</strong>
+        </p>
+
+        <section class="confirmation-banner" aria-labelledby="success-heading">
+            <h2 id="success-heading">Order confirmed — simulation complete</h2>
+
+            <p>
+                Your successful simulated payment has been recorded.
+                No money was charged, and no real shipment will be made.
+            </p>
+
+            <p class="confirmation-reference">
+                Order reference:
+                <strong>{{ order["order_id"] }}</strong>
+            </p>
+
+            <p class="confirmation-reference">
+                Simulation reference:
+                <strong>{{ payment_attempt["attempt_id"] }}</strong>
+            </p>
+        </section>
+
+        <div class="confirmation-layout">
+            <div>
+                <section class="confirmation-panel">
+                    <h2>Your order items</h2>
+
+                    <ul class="confirmation-items">
+                        {% for item in order["items"] %}
+                        <li>
+                            <strong>{{ item["product_name"] }}</strong>
+
+                            <small>
+                                Selected sample size:
+                                {{ item["selected_size"] }}
+                                · Quantity: {{ item["quantity"] }}
+                            </small>
+
+                            <small>
+                                Price per item:
+                                {{ format_dkk(item["unit_price_minor"]) }}
+                            </small>
+
+                            <p>
+                                {{ format_dkk(item["line_total_minor"]) }}
+                            </p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <p class="confirmation-note">
+                        Sample shopping sizes were selected independently.
+                        They are not verified conversions of predicted
+                        dataset size codes.
+                    </p>
+                </section>
+
+                <section class="confirmation-panel">
+                    <h2>Delivery selection</h2>
+                    <p>{{ order["delivery_label"] }}</p>
+
+                    <p class="confirmation-note">
+                        This records the selected prototype delivery option.
+                        It does not arrange delivery or collection.
+                    </p>
+                </section>
+            </div>
+
+            <aside class="confirmation-panel">
+                <h2>Recorded total</h2>
+
+                <dl class="confirmation-totals">
+                    <dt>Merchandise</dt>
+                    <dd>{{ format_dkk(order["subtotal_minor"]) }}</dd>
+
+                    <dt>Delivery</dt>
+                    <dd>{{ format_dkk(order["delivery_minor"]) }}</dd>
+
+                    <dt class="confirmation-total">Total</dt>
+                    <dd class="confirmation-total">
+                        {{ format_dkk(order["total_minor"]) }}
+                    </dd>
+                </dl>
+
+                <p class="confirmation-note">
+                    All amounts are illustrative and in DKK.
+                    No external payment provider was used.
+                </p>
+
+                <a class="confirmation-action" href="{{ url_for('shop') }}">
+                    Continue browsing
+                </a>
+
+                <p>
+                    <a href="{{ url_for(
+                        'order_review',
+                        order_id=order['order_id']
+                    ) }}">
+                        View saved order
+                    </a>
+                </p>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>

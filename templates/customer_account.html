@@ -1,0 +1,136 @@
+{#
+  OwnableFit template notes
+  Display the signed-in customer's profile details as read-only information.
+  Link to the order history and back to the customer shop.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | My Account</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .account-panel {
+            padding: 28px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .account-panel h2 {
+            margin-top: 0;
+        }
+
+        .account-details dt {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .account-details dd {
+            margin: 5px 0 0;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .account-note {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .account-action,
+        .account-action:visited {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 13px 20px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .account-action:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        @media (max-width: 700px) {
+            .account-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>My account</h2>
+        <p>View your profile information and access your orders.</p>
+
+        <div class="account-grid">
+            <section class="account-panel">
+                <h2>Profile information</h2>
+
+                <dl class="account-details">
+                    <dt>Name</dt>
+                    <dd>{{ customer["display_name"] }}</dd>
+
+                    <dt>Email address</dt>
+                    <dd>{{ customer["email"] }}</dd>
+
+                    <dt>Email verification</dt>
+                    <dd>Not implemented in this prototype</dd>
+                </dl>
+
+                <p class="account-note">
+                    Profile information is read-only for now.
+                    Passwords are never displayed.
+                    Body measurements are not stored in your profile.
+                </p>
+            </section>
+
+            <section class="account-panel">
+                <h2>Your orders</h2>
+
+                <p>
+                    View orders placed while signed in to this account
+                    and open their payment-simulation confirmations.
+                </p>
+
+                <a class="account-action" href="{{ url_for('my_orders') }}">
+                    View my orders
+                </a>
+
+                <p class="account-note">
+                    Earlier guest orders are not automatically linked
+                    to your account by email address.
+                </p>
+            </section>
+        </div>
+
+        <p>
+            <a href="{{ url_for('shop') }}">Continue browsing dresses</a>
+        </p>
+    </main>
+</body>
+</html>

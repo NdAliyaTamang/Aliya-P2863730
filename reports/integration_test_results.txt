@@ -1,0 +1,69 @@
+test_invalid_measurements (test_app.OwnableFitTests.test_invalid_measurements)
+Reject negatives, zero, text and non-finite numbers. ... ok
+test_missing_fields (test_app.OwnableFitTests.test_missing_fields)
+Each required field should be checked by the backend. ... ok
+test_navigation_links (test_app.OwnableFitTests.test_navigation_links)
+Every page should link to all three application pages. ... ok
+test_no_store_header (test_app.OwnableFitTests.test_no_store_header)
+Successful and rejected responses should discourage caching. ... ok
+test_oversized_submission (test_app.OwnableFitTests.test_oversized_submission)
+Reject request bodies above the configured limit. ... ok
+test_pages_load (test_app.OwnableFitTests.test_pages_load)
+All implemented pages should load successfully. ... ok
+test_prediction_failure (test_app.OwnableFitTests.test_prediction_failure)
+Unexpected failures should show a safe, understandable message. ... ok
+test_size_code_zero_displays (test_app.OwnableFitTests.test_size_code_zero_displays)
+A valid code of zero must not be mistaken for an empty result. ... ok
+test_start_again_clears_result (test_app.OwnableFitTests.test_start_again_clears_result)
+Opening a fresh form should not show the previous prediction. ... ok
+test_unknown_categories (test_app.OwnableFitTests.test_unknown_categories)
+Reject dress IDs and bra sizes outside model-supported options. ... ok
+test_valid_prediction (test_app.OwnableFitTests.test_valid_prediction)
+The web result should match the direct prediction function. ... ok
+test_catalogue_link_on_all_pages (test_catalogue.CatalogueTests.test_catalogue_link_on_all_pages) ... ok
+test_catalogue_loads (test_catalogue.CatalogueTests.test_catalogue_loads) ... ok
+test_first_page_contains_supported_ids (test_catalogue.CatalogueTests.test_first_page_contains_supported_ids) ... ok
+test_invalid_page_returns_first_page (test_catalogue.CatalogueTests.test_invalid_page_returns_first_page) ... ok
+test_large_page_returns_last_page (test_catalogue.CatalogueTests.test_large_page_returns_last_page) ... ok
+test_no_matching_results (test_catalogue.CatalogueTests.test_no_matching_results) ... ok
+test_result_identifies_submitted_dress (test_catalogue.CatalogueTests.test_result_identifies_submitted_dress) ... ok
+test_search_results_match_query (test_catalogue.CatalogueTests.test_search_results_match_query) ... ok
+test_search_text_is_escaped (test_catalogue.CatalogueTests.test_search_text_is_escaped) ... ok
+test_second_page_contains_next_ids (test_catalogue.CatalogueTests.test_second_page_contains_next_ids) ... ok
+test_selection_link_prefills_form (test_catalogue.CatalogueTests.test_selection_link_prefills_form) ... ok
+test_unknown_selection_rejected (test_catalogue.CatalogueTests.test_unknown_selection_rejected) ... ok
+test_equal_reductions_allowed (test_scenario_comparison.ComparisonCalculationTests.test_equal_reductions_allowed) ... ok
+test_example_comparison (test_scenario_comparison.ComparisonCalculationTests.test_example_comparison) ... ok
+test_fractional_expected_returns (test_scenario_comparison.ComparisonCalculationTests.test_fractional_expected_returns) ... ok
+test_invalid_reductions_rejected (test_scenario_comparison.ComparisonCalculationTests.test_invalid_reductions_rejected) ... ok
+test_unordered_reductions_rejected (test_scenario_comparison.ComparisonCalculationTests.test_unordered_reductions_rejected) ... ok
+test_clear_comparison (test_scenario_comparison.ComparisonPageTests.test_clear_comparison) ... ok
+test_missing_fields (test_scenario_comparison.ComparisonPageTests.test_missing_fields) ... ok
+test_navigation_from_every_page (test_scenario_comparison.ComparisonPageTests.test_navigation_from_every_page) ... ok
+test_no_store_header (test_scenario_comparison.ComparisonPageTests.test_no_store_header) ... ok
+test_oversized_submission (test_scenario_comparison.ComparisonPageTests.test_oversized_submission) ... ok
+test_page_loads (test_scenario_comparison.ComparisonPageTests.test_page_loads) ... ok
+test_safe_failure_message (test_scenario_comparison.ComparisonPageTests.test_safe_failure_message) ... ok
+test_unordered_submission (test_scenario_comparison.ComparisonPageTests.test_unordered_submission) ... ok
+test_valid_submission (test_scenario_comparison.ComparisonPageTests.test_valid_submission) ... ok
+test_arithmetic_overflow (test_sustainability.SustainabilityCalculationTests.test_arithmetic_overflow) ... ok
+test_example_calculation (test_sustainability.SustainabilityCalculationTests.test_example_calculation) ... ok
+test_full_reduction (test_sustainability.SustainabilityCalculationTests.test_full_reduction) ... ok
+test_invalid_assumptions (test_sustainability.SustainabilityCalculationTests.test_invalid_assumptions) ... ok
+test_relative_reduction (test_sustainability.SustainabilityCalculationTests.test_relative_reduction)
+A 10% relative reduction in 20% leaves an 18% return rate. ... ok
+test_zero_orders (test_sustainability.SustainabilityCalculationTests.test_zero_orders) ... ok
+test_zero_reduction (test_sustainability.SustainabilityCalculationTests.test_zero_reduction) ... ok
+test_clear_scenario (test_sustainability.SustainabilityPageTests.test_clear_scenario) ... ok
+test_invalid_percentage (test_sustainability.SustainabilityPageTests.test_invalid_percentage) ... ok
+test_missing_fields (test_sustainability.SustainabilityPageTests.test_missing_fields) ... ok
+test_navigation_from_all_pages (test_sustainability.SustainabilityPageTests.test_navigation_from_all_pages) ... ok
+test_no_store_header (test_sustainability.SustainabilityPageTests.test_no_store_header) ... ok
+test_oversized_submission (test_sustainability.SustainabilityPageTests.test_oversized_submission) ... ok
+test_page_loads_without_result (test_sustainability.SustainabilityPageTests.test_page_loads_without_result) ... ok
+test_valid_submission (test_sustainability.SustainabilityPageTests.test_valid_submission) ... ok
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.154s
+
+OK

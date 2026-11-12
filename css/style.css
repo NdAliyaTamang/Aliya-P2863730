@@ -1,0 +1,317 @@
+/* OwnableFit: shared colours and layout. */
+:root {
+    color-scheme: light;
+
+    --background: #f7f3ee;
+    --surface: #fffdf9;
+    --text: #372f33;
+    --muted: #655a60;
+    --primary: #704957;
+    --primary-hover: #573743;
+    --border: #d9ccc5;
+    --focus: #704957;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+}
+
+/* Brand header aligned with the main content. */
+header {
+    padding: 32px max(24px, calc((100vw - 1100px) / 2));
+    background: #dfc9c3;
+    border-bottom: 1px solid #bba29b;
+}
+
+header h1 {
+    margin: 0;
+    color: #47313c;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(36px, 5vw, 48px);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -1px;
+}
+
+header p {
+    margin: 10px 0 0;
+    color: #503d46;
+    font-size: 15px;
+}
+
+/* Readable page width and consistent headings. */
+main {
+    width: 100%;
+    max-width: 1100px;
+    margin: 32px auto 64px;
+    padding: 0 24px;
+}
+
+h2 {
+    margin: 28px 0 12px;
+    color: #513d47;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+h3 {
+    line-height: 1.4;
+}
+
+p {
+    margin: 10px 0;
+}
+
+main > p {
+    max-width: 780px;
+    color: var(--muted);
+}
+
+a {
+    color: var(--primary);
+    text-underline-offset: 4px;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* Navigation wraps onto additional lines when needed. */
+nav[aria-label="Main navigation"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+nav[aria-label="Main navigation"] a {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+nav[aria-label="Main navigation"] a:hover {
+    background: #eee4df;
+    text-decoration: underline;
+}
+
+nav[aria-label="Main navigation"] a[aria-current="page"] {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+nav[aria-label="Main navigation"] span {
+    display: none;
+}
+
+/* Shared form layout; page-specific layouts can extend this. */
+form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+    padding: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgb(67 46 53 / 5%);
+}
+
+form > p {
+    min-width: 0;
+    margin: 0;
+}
+
+form br {
+    display: none;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #42353c;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Readable controls with clear boundaries. */
+input,
+select,
+textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #aa959f;
+    border-radius: 8px;
+    color: var(--text);
+    font: inherit;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+    border-color: var(--primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #74656d;
+    opacity: 1;
+}
+
+small {
+    line-height: 1.5;
+}
+
+#bra_help {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+/* Explicit white text fixes the dark-text-on-dark-button issue. */
+button {
+    grid-column: 1 / -1;
+    min-height: 50px;
+    padding: 13px 22px;
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: #ffffff;
+}
+
+button:active {
+    background: #47303a;
+    color: #ffffff;
+}
+
+button:disabled {
+    background: #e8dfe3;
+    border-color: #cbbdc4;
+    color: #65565f;
+    cursor: not-allowed;
+}
+
+/* Keep link-based action buttons readable in every state. */
+a.dashboard-action,
+a.dress-action,
+a.dashboard-action:visited,
+a.dress-action:visited {
+    color: #ffffff;
+}
+
+a.dashboard-action:hover,
+a.dress-action:hover {
+    color: #ffffff;
+}
+
+/* Visible focus for keyboard navigation. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex="0"]:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+}
+
+/* Results and errors also use headings to convey their purpose. */
+section[role="status"],
+section[role="alert"] {
+    margin: 24px 0;
+    padding: 24px;
+    border: 1px solid;
+    border-radius: 12px;
+}
+
+section[role="status"] {
+    background: #eee4df;
+    border-color: #bca39d;
+    color: var(--text);
+}
+
+section[role="status"] strong {
+    display: inline-block;
+    margin-left: 8px;
+    color: #573743;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 38px;
+    line-height: 1.2;
+}
+
+section[role="alert"] {
+    background: #fff1ed;
+    border-color: #bf8273;
+    color: #762f23;
+}
+
+section[role="status"] h2,
+section[role="alert"] h2 {
+    margin-top: 0;
+    color: inherit;
+}
+
+/* Smaller screens use one form column. */
+@media (max-width: 640px) {
+    header {
+        padding: 26px 20px;
+    }
+
+    main {
+        margin-top: 24px;
+        padding: 0 16px;
+    }
+
+    h2 {
+        font-size: 25px;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 22px 18px;
+    }
+
+    nav[aria-label="Main navigation"] {
+        gap: 6px;
+    }
+
+    nav[aria-label="Main navigation"] a {
+        padding: 9px 11px;
+    }
+}

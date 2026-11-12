@@ -1,0 +1,256 @@
+{#
+  OwnableFit template notes
+  Let the customer select a simulated payment outcome.
+  Submit the form token and payment token so Flask can check the request
+  against the reviewed order.
+-#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnableFit | Payment</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <style>
+        .payment-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 1fr);
+            gap: 24px;
+            align-items: start;
+            margin-top: 24px;
+        }
+
+        .payment-panel {
+            padding: 26px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface);
+        }
+
+        .payment-panel h2 {
+            margin-top: 0;
+        }
+
+        .payment-notice {
+            padding: 18px;
+            margin: 20px 0;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+        }
+
+        .payment-form {
+            grid-template-columns: 1fr;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .payment-totals {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+        }
+
+        .payment-totals dt {
+            color: var(--muted);
+        }
+
+        .payment-totals dd {
+            margin: 0;
+            text-align: right;
+        }
+
+        .payment-total {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 650;
+        }
+
+        .payment-small {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .payment-reference {
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 700px) {
+            .payment-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .payment-totals {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-totals dd {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OwnableFit</h1>
+        <p>Women's dresses and size recommendation</p>
+    </header>
+
+    <main>
+        {% include "navigation.html" %}
+
+        <h2>Payment</h2>
+        <p>
+            Cart → Checkout → Order review →
+            <strong>Simulated payment</strong> → Confirmation
+        </p>
+
+        <div class="payment-notice">
+            <strong>Payment simulation</strong>
+            <p>
+                This is a local prototype demonstration.
+                No payment provider is contacted and no money moves.
+                Do not enter card or bank details.
+            </p>
+        </div>
+
+        {% if error %}
+        <section role="alert">
+            <h2>Unable to process simulation</h2>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if outcome == "declined" %}
+        <section role="alert">
+            <h2>Simulated payment declined</h2>
+            <p>
+                The order remains awaiting payment.
+                You can choose another outcome and try again.
+                No money was charged.
+            </p>
+        </section>
+        {% elif outcome == "cancelled" %}
+        <section role="status">
+            <h2>Simulated payment cancelled</h2>
+            <p>
+                The order remains awaiting payment.
+                Cancelling this attempt does not cancel the order.
+                No money was charged.
+            </p>
+        </section>
+        {% endif %}
+
+        <div class="payment-layout">
+            <section class="payment-panel" aria-labelledby="action-heading">
+                <h2 id="action-heading">Complete the demonstration</h2>
+
+                <form
+                    class="payment-form"
+                    method="post"
+                    action="{{ url_for(
+                        'payment',
+                        order_id=order['order_id']
+                    ) }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token }}"
+                    >
+
+                    <!-- The backend binds this token to the current
+                         guest and order to prevent duplicate attempts. -->
+                    <input
+                        type="hidden"
+                        name="payment_token"
+                        value="{{ payment_token }}"
+                    >
+
+                    <div>
+                        <label for="payment-outcome">
+                            Simulation outcome
+                        </label>
+
+                        <select
+                            id="payment-outcome"
+                            name="outcome"
+                            aria-describedby="outcome-help"
+                            required
+                        >
+                            <option value="" selected disabled>
+                                Choose an outcome
+                            </option>
+                            <option value="success">
+                                Successful payment
+                            </option>
+                            <option value="declined">
+                                Declined payment
+                            </option>
+                            <option value="cancelled">
+                                Cancelled payment
+                            </option>
+                        </select>
+
+                        <p id="outcome-help" class="payment-small">
+                            Success records simulated payment and opens
+                            confirmation. Decline and cancellation allow
+                            another attempt.
+                        </p>
+                    </div>
+
+                    <button type="submit">
+                        Run payment simulation
+                    </button>
+                </form>
+
+                <p>
+                    <a href="{{ url_for(
+                        'order_review',
+                        order_id=order['order_id']
+                    ) }}">
+                        ← Back to order review
+                    </a>
+                </p>
+            </section>
+
+            <aside class="payment-panel" aria-labelledby="summary-heading">
+                <h2 id="summary-heading">Order summary</h2>
+
+                <p class="payment-reference">
+                    {{ order["order_id"] }}
+                </p>
+
+                <dl class="payment-totals">
+                    <dt>Merchandise</dt>
+                    <dd>{{ format_dkk(order["subtotal_minor"]) }}</dd>
+
+                    <dt>{{ order["delivery_label"] }}</dt>
+                    <dd>{{ format_dkk(order["delivery_minor"]) }}</dd>
+
+                    <dt class="payment-total">Total</dt>
+                    <dd class="payment-total">
+                        {{ format_dkk(order["total_minor"]) }}
+                    </dd>
+                </dl>
+
+                <p class="payment-small">
+                    The amount comes from the saved order, including
+                    the selected delivery charge.
+                    Product prices and delivery charges are illustrative.
+                </p>
+            </aside>
+        </div>
+    </main>
+</body>
+</html>
